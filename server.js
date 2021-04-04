@@ -103,15 +103,18 @@ app.post("/login", function(req,res){
 // get request from the server based on the parameters to display dashboard
 app.get('/user', function(req,res){
   console.log(req.query);
-  var q = student.findOne({sid: req.query.sid}, function(err, currentStudent){
-    if(err){
-      res.send(err);
-    }
-    else{
-      res.status(200).json(currentStudent);
-    }
-  });
-})
+  var q = student
+            .findOne({sid: req.query.sid})
+            .populate('classesEnrolled')
+            .exec(function(err, currentStudent){
+              if(err){
+                res.send(err);
+              }
+              else{
+                res.status(200).json(currentStudent);
+              }
+            });
+});
 
 // Listening to the port PORT.
 app.listen(PORT, function(){
