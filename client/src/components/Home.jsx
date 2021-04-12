@@ -1,11 +1,10 @@
 import React from 'react'
-import {Link} from 'react-router-dom';
+import HomeNav from './HomeNav.jsx';
 
-export default function Home() {
+export default function FirstPage() {
   return (
     <div>
-      <Link to="/register">Register</Link>
-      <Link to="/login">Login</Link>
+      <HomeNav />
     </div>
-  )
+  );
 }

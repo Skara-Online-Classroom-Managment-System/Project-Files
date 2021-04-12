@@ -2,13 +2,12 @@ import React from 'react'
 import axios from "axios";
 import { useParams } from 'react-router-dom';
 
-import ClassPane from "./ClassPane.jsx";
-import OptionsPane from "./OptionsPane.jsx";
+import Classcard from "./Classcard.jsx";
+import AddClass from "./AddClass.jsx";
 
 export default function Dashboard() {
 
-  const [studentData, setstudentData] = React.useState({});
-  const [selectedOption, setSelectedOption] = React.useState(1);
+  const [studentData, setstudentData] = React.useState({"classesEnrolled":[]});
   const { sid } = useParams();
  
   React.useEffect(() => {
@@ -23,13 +22,15 @@ export default function Dashboard() {
         const loadedData = res.data;
         setstudentData(loadedData);
     })
-  },[]);
+  },[studentData.length]);
 
   return (
     <div>
       Hi this is the dashboard for student {studentData.sid}.
-      <ClassPane data={studentData} />
-      <OptionsPane data={studentData} select={selectedOption} />
+      {(studentData.classesEnrolled).map(function(classroom, ind){
+        return (<Classcard sid={sid} data={classroom} key={ind} />);
+      })}
+      <AddClass />
     </div>
   );
 }

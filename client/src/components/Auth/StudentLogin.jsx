@@ -20,10 +20,11 @@ function Login(){
         password: details.password
       },
       withCredentials: true,
-      url: "http://localhost:5000/login",
+      url: "http://localhost:5000/studentauth/login",
     }).then((res) => {
-        var queryExtender = res.data.sid;
-        history.push('/user/' + queryExtender);
+      console.log(res);
+        // var queryExtender = res.data.sid;
+        // history.push('/student/' + queryExtender);
     });
   }
 
@@ -42,10 +43,14 @@ function Login(){
   return (
     <div>
       <form>
-        <label for="fn">SID:</label>
-        <input type="text" name="sid" value={details.sid} onChange={handleChange}/>
-        <label for="password">Password</label>
-        <input type="password" name="password" value={details.password} onChange={handleChange}/>
+        <div>
+          <label for="fn">SID: </label>
+          <input type="text" name="sid" value={details.sid} onChange={handleChange}/>
+        </div>
+        <div>
+          <label for="password">Password: </label>
+          <input type="password" name="password" value={details.password} onChange={handleChange}/>
+        </div>
         <button onClick={(event) => {
           event.preventDefault();
           handleSubmit();
