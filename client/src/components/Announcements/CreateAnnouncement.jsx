@@ -18,7 +18,7 @@ function CreateAnnouncement(){
         announcement:details.announcement
       },
       withCredentials:true,
-      url:"http://localhost:8080/createAnnouncement/"+username+"/"+id
+      url:"http://localhost:5000/createAnnouncement/"+username+"/"+id
     }).then((res)=>{
     console.log("hello")
     });

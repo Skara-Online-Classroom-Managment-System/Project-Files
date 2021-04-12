@@ -9,7 +9,7 @@ import StudentSignup from "./Auth/StudentSignup.jsx";
 import TeacherLogin from "./Auth/TeacherLogin.jsx";
 import TeacherSignup from "./Auth/TeacherSignup.jsx";
 import Dashboard_student from './Dashboard/Dashboard_student.jsx';
-import Dashboard_teacher from "./Dashboard/dashboard";
+import Dashboard_teacher from "./Dashboard/Dashboard_teacher.jsx";
 import Classroom_Student from './Classroom/Classroom_student.jsx';
 import createClassroom from "./Classroom/createClassroom";
 import createAnnouncement from "./Announcements/CreateAnnouncement";

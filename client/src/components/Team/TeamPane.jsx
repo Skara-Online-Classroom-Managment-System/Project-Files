@@ -10,7 +10,7 @@ const {username,id}=useParams();
 React.useEffect(()=>{
 axios({
     method:"GET",
-    url:"http://localhost:8080/team/"+username+"/"+id
+    url:"http://localhost:5000/team/"+username+"/"+id
 }).then((res)=>{
     setTeamData(res.data.teams);
 })
