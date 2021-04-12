@@ -3,7 +3,7 @@ import axios from "axios";
 import { useParams } from 'react-router-dom';
 
 import Classcard from "./Classcard.jsx";
-import AddClass from "./AddClass.jsx";
+import AddClass from "../AddClass.jsx";
 
 export default function Dashboard() {
 
@@ -22,7 +22,7 @@ export default function Dashboard() {
         const loadedData = res.data;
         setstudentData(loadedData);
     })
-  },[studentData.length]);
+  },[studentData.length,sid]);
 
   return (
     <div>

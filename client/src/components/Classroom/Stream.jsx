@@ -1,5 +1,5 @@
 import React from 'react'
-import Announcement from './Announcement.jsx';
+import Announcement from '../Announcements/Announcement.jsx';
 
 export default function Stream(props) {
   let toshow = null;

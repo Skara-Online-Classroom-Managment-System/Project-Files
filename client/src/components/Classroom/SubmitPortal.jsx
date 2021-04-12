@@ -4,7 +4,7 @@ export default function SubmitPortal() {
   return (
     <div>
       <input type="text" name="submissionLink" />
-      <button onClick={handleClick}>Submit</button>
+      {/* <button onClick={handleClick}>Submit</button> */}
     </div>
   )
 }

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 
 import Stream from './Stream.jsx';
-import Teams from './Teams.jsx';
+import Teams from '../Team/Teams.jsx';
 import People from './People.jsx';
 
 export default function Classroom() {
