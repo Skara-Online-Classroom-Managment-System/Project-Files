@@ -53,8 +53,14 @@ const team = require('./models/teamModel.js');
 
 // passport plug in of the students
 passport.use(student.createStrategy());
-passport.serializeUser(student.serializeUser());
-passport.deserializeUser(student.deserializeUser());
+passport.serializeUser(function(student, done){
+  done(null, student.id);
+});
+passport.deserializeUser(function(id, done){
+  User.findById(id, function(err, user) {
+    done(err, user);
+  });
+});
 // passport plug in of the teachers
 passport.use(teacher.createStrategy());
 passport.serializeUser(teacher.serializeUser());
@@ -72,10 +78,22 @@ app.post("/teachersignup", function(req, res) {
       console.log(err);
     }
     else{
-      passport.authenticate("local")(req,res,function(){
-        res.status(200).json({"username":req.body.username});
+      passport.authenticate("local", function(err, teacher, info){
+        if(err){ 
+          return next(err); 
+        }
+        if(!teacher){
+          return "res.status(200).json({'Success':'101'});";
+        }
+        req.logIn(user, function(err) {
+        if (err) { return next(err); }
+        return " res.status('/users/' + user.username);";
+    });
+      })(req,res,function(){
+        console.log("Hello");
           return;
         });
+        console.log("hello2");
       }
     })      
 });
