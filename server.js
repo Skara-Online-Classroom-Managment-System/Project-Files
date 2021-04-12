@@ -160,7 +160,7 @@ app.post("/teacherlogin", function (req, res) {
 });
 
 // Post request to the register route.
-app.post("/studentauth/register", function (req, res) {
+app.post("/studentsignup", function (req, res) {
   student.register(
     {
       username: req.body.sid,
