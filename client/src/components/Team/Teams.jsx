@@ -1,7 +1,7 @@
 import React from 'react'
 
 import ViewTeams from './ViewTeams.jsx';
-import TeacherChat from './TeacherChat.jsx';
+import TeacherChat from '../Chat/TeacherChat.jsx';
 import TeamChat from '../Chat/TeamChat.jsx';
 
 export default function Teams(props) {

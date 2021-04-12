@@ -2,8 +2,8 @@ import React from 'react'
 import axios from "axios";
 import { useParams } from 'react-router-dom';
 
-import Classcard from "./Classcard.jsx";
-import AddClass from "../AddClass.jsx";
+import Classcard from "../Classcard/Classcard.jsx";
+import AddClass from "../Classroom/AddClass.jsx";
 
 export default function Dashboard() {
 

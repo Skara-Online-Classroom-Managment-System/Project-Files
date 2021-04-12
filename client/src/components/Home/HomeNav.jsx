@@ -1,10 +1,10 @@
 import React from 'react';
-import { useHistory } from 'react-router-dom';
-import { Navbar, Nav, NavDropdown, Button } from 'react-bootstrap';
+// import { useHistory } from 'react-router-dom';
+import { Navbar, Nav, NavDropdown } from 'react-bootstrap';
 
 export default function HomeNav() {
   
-  const history = useHistory();
+  // const history = useHistory();
   return (
     <Navbar bg="light" expand="lg">
       <Navbar.Brand href="#home">Skara Classroom Manager</Navbar.Brand>
