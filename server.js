@@ -3,11 +3,11 @@ const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const passport = require("passport");
-// const localStrategy = require("passport-local").Strategy;
+const localStrategy = require("passport-local").Strategy;
 const morgan = require("morgan");
 const path = require("path");
 const cors = require("cors");
-// const cookieParser = require("cookie-parser");
+const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 
 const MongoStore = require('connect-mongo')
@@ -41,7 +41,7 @@ app.use(
   })
 );
 // mongoUrl: "mongodb://localhost/SkaraDB"
-// app.use(cookieParser("Our little secret."));
+app.use(cookieParser("Our little secret."));
 app.use(passport.initialize());
 app.use(passport.session());
 const passpor=require("./index_passport");
@@ -87,11 +87,16 @@ const team = require("./models/teamModel.js");
 //   })
 // );
 
-// passport.serializeUser(function (user, done) {
-//   done(null, user.id);
-// });
+passport.serializeUser(function (user, done) {
+  done(null, user.id);
+});
+passport.deserializeUser(function (id, done) {
+  student.findOne({_id:id},(err,user)=>{
+    done(err,user);
+  })
+});
 // passport.deserializeUser(function (id, done) {
-//   student.findOne({_id:id},(err,user)=>{
+//   teacher.findOne({_id:id},(err,user)=>{
 //     done(err,user);
 //   })
 // });
@@ -113,12 +118,13 @@ const team = require("./models/teamModel.js");
 
 app.get("/logout",function(req,res){
 // console.log(isAuthenticated());  
-    if (req.user) {
-        req.logout()
+    // if (req.se) {
+    console.log(req.session);    
+    req.logout()
         res.status(200).json({Text:Logout})
-    } else {
-        res.send({ msg: 'no user to log out' })
-    }
+    // } else {
+        // res.send({ msg: 'no user to log out' })
+    // }
 
 })
 
@@ -246,20 +252,58 @@ app.post("/studentsignup", async function (req, res) {
 });
 
 // Post request to the login route.
-app.post("/studentlogin", function (req, res, next) {
-  console.log('routes/user.js, login, req.body: ');
-  console.log(req.body)
-  next()
-},
+app.post("/studentlogin",  function(req, res) {
+//   console.log('routes/user.js, login, req.body: ');
+//   console.log(req.body)
+//   next()
+// },
+const enteredDetails={
+  username:req.body.username,
+  password:req.body.password
+}
+const user = new teacher({
+  username: req.body.username,
+  password: req.body.password,
+});
+student.findOne(
+  { username: enteredDetails.username },
+  async function (err, foundUser) {
+    if (err) {
+      console.log(err);
+    } else {
+      if (foundUser) {
+        await bcrypt.compare(enteredDetails.password, foundUser.password, function(err, result) {
+        if (result===true) {
+          console.log("user found");
+          
+           req.logIn(user, (err) => {
+            if (err) {
+              return next(err);
+            }
+            return res.status(200).json({ username: enteredDetails.username });
+          });
+        } else {
+          console.log("Enter correct password");
+        }
+        });
+      } else {
+        console.log("sid does not exist");
+      }
+    }
+    // req.session.passport=user;
+    // console.log(req.isAuthenticated());
+    console.log(req.session); 
+  })
+// );
   // const user = new student({
   //   username: req.body.username,
   //   password: req.body.password,
   // });
   // console.log(user,"outside auth");
  
-  passpor.authenticate("local", (err,user,info) => {
+  // passpor.authenticate("local", (err,user,info) => {
     // console.log(req.user, "inside auth");
-    console.log(user)
+    // console.log(user)
     // if (err) {
     //   return next(err);
     // }
@@ -270,25 +314,25 @@ app.post("/studentlogin", function (req, res, next) {
     //     if (err) {
     //       return next(err);
     //     }
-    var userInfo={
-      flag:false,
-      username:""
-    }
-    userInfo={
-    flag:true, 
-    username:user.username
-   };
+  //   var userInfo={
+  //     flag:false,
+  //     username:""
+  //   }
+  //   userInfo={
+  //   flag:true, 
+  //   username:user.username
+  //  };
   
         // console.log(req.user);
       // });
       // console.log(req.session.passport);    // }
-  })
+  // })
   // res.status(200).json({ username: userInfo });
   // console.log()
 
   // (req, res, next);
 
-);
+});
 
 // ..............................................................
 
