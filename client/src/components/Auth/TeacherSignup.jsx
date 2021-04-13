@@ -25,8 +25,14 @@ function TeacherRegister() {
       url: "http://localhost:5000/teachersignup",
     }).then((res) => {
       var queryExtender = res;
+      if(res.status===200){
+        history.push("/dashboard/"+res.data.username);
+      }
+      if(res.status===201){
+        <li>{res.data.Text}</li>
+      }
       console.log(queryExtender);
-      // history.push("/dashboard/"+queryExtender);
+      
     });
   }
   function handleChange(event) {

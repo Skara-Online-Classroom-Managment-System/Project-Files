@@ -1,8 +1,7 @@
 // Requiring the mongoose model
 const mongoose = require('mongoose');
-const session = require('express-session');
-const passport = require('passport');
-const passportLocalMongoose = require('passport-local-mongoose');
+const passport=require('passport');
+const passportLocalMongoose=require('passport-local-mongoose');
 
 // Defining the schema of the teams.
 const teamSchema = new mongoose.Schema({
@@ -30,7 +29,6 @@ const teamSchema = new mongoose.Schema({
     }
   }]
 });
-
 teamSchema.plugin(passportLocalMongoose);
 const team = mongoose.model('team', teamSchema);
 
