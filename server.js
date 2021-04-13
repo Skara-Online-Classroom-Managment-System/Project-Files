@@ -90,45 +90,14 @@ app.post("/teachersignup", function (req, res) {
       if (!currentTeacher) {
         const hashedPassword = await bcrypt.hash(req.body.pw, 10);
         const newTeacher = new teacher({
+          fn: req.body.fn,
+          classesEnrolled: [],
+          invitesPending: [],
           username: req.body.username,
-          password: hashedPassword,
+          pw: hashedPassword
         });
         await newTeacher.save();
         res.status(200).json({ username: req.body.username });
-      }
-    }
-  );
-
-  teacher.register(
-    {
-      fn: req.body.fn,
-      username: req.body.username,
-      classesEnrolled: [],
-      invitesPending: [],
-    },
-    req.body.pw,
-    function (err, registeredTeacher) {
-      if (err) {
-        console.log(err);
-      } else {
-        passport.authenticate("local", function (err, teacher, info) {
-          if (err) {
-            return next(err);
-          }
-          if (!teacher) {
-            return "res.status(200).json({'Success':'101'});";
-          }
-          req.logIn(user, function (err) {
-            if (err) {
-              return next(err);
-            }
-            return " res.status('/users/' + user.username);";
-          });
-        })(req, res, function () {
-          console.log("Hello");
-          return;
-        });
-        console.log("hello2");
       }
     }
   );
