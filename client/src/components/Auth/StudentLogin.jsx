@@ -22,7 +22,7 @@ function Login() {
     }).then((res) => {
       console.log(res);
       // var queryExtender = res.data.username;
-      // history.push('/student/' + queryExtender);
+      history.push('/student/' + res.data.username);
     });
   }
 

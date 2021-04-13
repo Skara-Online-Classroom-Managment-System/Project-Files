@@ -3,12 +3,14 @@ const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const passport = require("passport");
-const localStrategy = require("passport-local").Strategy;
+// const localStrategy = require("passport-local").Strategy;
 const morgan = require("morgan");
 const path = require("path");
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
+// const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
+
+const MongoStore = require('connect-mongo')
 
 // Define the PORT
 const PORT = 5000;
@@ -33,16 +35,18 @@ app.use(
 app.use(
   session({
     secret: "Our little secret.",
+    store: MongoStore.create({ mongoUrl:"mongodb://localhost:27017/SkaraDB" }),
     resave: false,
     saveUninitialized: false,
   })
 );
-app.use(cookieParser("Our little secret."));
+// mongoUrl: "mongodb://localhost/SkaraDB"
+// app.use(cookieParser("Our little secret."));
 app.use(passport.initialize());
 app.use(passport.session());
-require("./passportConfig")(passport);
+const passpor=require("./index_passport");
 // connecting to the mongoDB
-mongoose.connect("mongodb://localhost/SkaraDB", {
+mongoose.connect("mongodb://localhost:27017/SkaraDB", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false,
@@ -53,6 +57,7 @@ db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", function () {
   console.log("Database connected");
 });
+
 
 // Requiring the models
 const classroom = require("./models/classroomModel.js");
@@ -91,12 +96,33 @@ const team = require("./models/teamModel.js");
 //   })
 // });
 // passport plug in of the teachers
-passport.use(teacher.createStrategy());
-passport.serializeUser(teacher.serializeUser());
-passport.deserializeUser(teacher.deserializeUser());
+// passport.use(teacher.createStrategy());
+// passport.serializeUser(teacher.serializeUser());
+// passport.deserializeUser(teacher.deserializeUser());
 // passport.use(student.createStrategy());
 // passport.serializeUser(student.serializeUser());
 // passport.deserializeUser(student.deserializeUser());
+// passport.serializeUser(function (teacher, cb) {
+//   cb(null, teacher._id);
+//   });
+//   passport.deserializeUser(function (id, cb) {
+//   teacher.findOne({_id:id},(err,user)=>{
+//     cb(err,user);
+//   })
+// });
+
+app.get("/logout",function(req,res){
+// console.log(isAuthenticated());  
+    if (req.user) {
+        req.logout()
+        res.status(200).json({Text:Logout})
+    } else {
+        res.send({ msg: 'no user to log out' })
+    }
+
+})
+
+
 
 // Post request to the teacher signup route
 app.post("/teachersignup", async function (req, res) {
@@ -141,16 +167,16 @@ app.post("/teacherlogin", function (req, res,next) {
   });
   teacher.findOne(
     { username: enteredDetails.username },
-    function (err, foundUser) {
+    async function (err, foundUser) {
       if (err) {
         console.log(err);
       } else {
         if (foundUser) {
-          bcrypt.compare(enteredDetails.pw, foundUser.pw, function(err, result) {
+          await bcrypt.compare(enteredDetails.pw, foundUser.pw, function(err, result) {
           if (result===true) {
             console.log("user found");
             
-            req.logIn(user, (err) => {
+             req.logIn(user, (err) => {
               if (err) {
                 return next(err);
               }
@@ -163,7 +189,9 @@ app.post("/teacherlogin", function (req, res,next) {
         } else {
           console.log("email id does not exist");
         }
-      }
+      }req.session.passport=user;
+      // console.log(req.isAuthenticated());
+      console.log(req.session); 
     }
   );
 
@@ -219,29 +247,48 @@ app.post("/studentsignup", async function (req, res) {
 
 // Post request to the login route.
 app.post("/studentlogin", function (req, res, next) {
-  const user = new student({
-    username: req.body.username,
-    password: req.body.password,
-  });
-  console.log(user,"outside auth");
-  passport.authenticate("local", (err, user, info) => {
-    console.log(user, "inside auth");
-    if (err) {
-      return next(err);
+  console.log('routes/user.js, login, req.body: ');
+  console.log(req.body)
+  next()
+},
+  // const user = new student({
+  //   username: req.body.username,
+  //   password: req.body.password,
+  // });
+  // console.log(user,"outside auth");
+ 
+  passpor.authenticate("local", (err,user,info) => {
+    // console.log(req.user, "inside auth");
+    console.log(user)
+    // if (err) {
+    //   return next(err);
+    // }
+    // if (!user) {
+    //   return res.status(201).json({ Text: "No such User exists." });
+    // } else {
+    //   req.logIn(user, (err) => {
+    //     if (err) {
+    //       return next(err);
+    //     }
+    var userInfo={
+      flag:false,
+      username:""
     }
-    if (!user) {
-      return res.status(201).json({ Text: "No such User exists." });
-    } else {
-      req.logIn(user, (err) => {
-        if (err) {
-          return next(err);
-        }
-        return res.status(200).json({ Text: "Successfully Authenticated!!" });
-        console.log(req.user);
-      });
-    }
-  })(req, res, next);
-});
+    userInfo={
+    flag:true, 
+    username:user.username
+   };
+  
+        // console.log(req.user);
+      // });
+      // console.log(req.session.passport);    // }
+  })
+  // res.status(200).json({ username: userInfo });
+  // console.log()
+
+  // (req, res, next);
+
+);
 
 // ..............................................................
 
@@ -430,10 +477,7 @@ app.get("/classroom", function (req, res) {
     });
 });
 
-app.get("/logout",function(req,res){
-  req.logout();
-  res.status(200).json();
-})
+
 
 // Listening to the port PORT.
 app.listen(PORT, function () {

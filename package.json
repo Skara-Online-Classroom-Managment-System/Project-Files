@@ -17,6 +17,8 @@
     "bcryptjs": "^2.4.3",
     "bootstrap": "^4.6.0",
     "concurrently": "^6.0.0",
+    "connect-mongo": "^4.4.1",
+    "connect-mongodb-session": "^2.4.1",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "express": "^4.17.1",
