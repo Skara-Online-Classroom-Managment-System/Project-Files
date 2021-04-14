@@ -1,29 +1,34 @@
 import axios from "axios";
-import { BrowserRouter, useHistory } from "react-router-dom";
+import { Redirect } from "react-router-dom";
 import React from "react";
 
 function Login() {
-  const history = useHistory();
-
   const [details, setDetails] = React.useState({
     username: "",
     password: "",
   });
+  const [redirect, setRedirect] = React.useState(false);
 
-  function handleSubmit() {
-    axios({
+  async function handleSubmit() {
+    const response = await fetch("http://localhost:5000/studentlogin", {
       method: "POST",
-      data: {
-        username: details.username,
-        password: details.password,
-      },
-      withCredentials: true,
-      url: "http://localhost:5000/studentlogin",
-    }).then((res) => {
-      console.log(res);
-      // var queryExtender = res.data.username;
-      // history.push('/student/' + res.data.username);
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        ...details,
+      }),
     });
+    const content = await response.json();
+    if (response.status === 201) {
+      console.log(content);
+    } else {
+      setRedirect(true);
+      console.log(content);
+    }
+  }
+
+  if (redirect) {
+    return <Redirect to="/studentdashboard" />;
   }
 
   function handleChange(event) {
@@ -42,7 +47,7 @@ function Login() {
     <div>
       <form>
         <div>
-          <label for="fn">SID: </label>
+          <label for="username">SID: </label>
           <input
             type="text"
             name="username"

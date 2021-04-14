@@ -1,7 +1,7 @@
-import React from 'react'
-import HomeNav from './HomeNav.jsx';
+import React from "react";
+import HomeNav from "./HomeNav.jsx";
 
-export default function FirstPage() {
+export default function Home() {
   return (
     <div>
       <HomeNav />

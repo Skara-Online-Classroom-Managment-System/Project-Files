@@ -9,8 +9,9 @@ const path = require("path");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-const MongoStore = require('connect-mongo')
+const MongoStore = require("connect-mongo");
 
 // Define the PORT
 const PORT = 5000;
@@ -35,16 +36,16 @@ app.use(
 app.use(
   session({
     secret: "Our little secret.",
-    store: MongoStore.create({ mongoUrl:"mongodb://localhost:27017/SkaraDB" }),
+    store: MongoStore.create({ mongoUrl: "mongodb://localhost:27017/SkaraDB" }),
     resave: false,
     saveUninitialized: false,
   })
 );
 // mongoUrl: "mongodb://localhost/SkaraDB"
-app.use(cookieParser("Our little secret."));
+app.use(cookieParser());
 app.use(passport.initialize());
 app.use(passport.session());
-const passpor=require("./index_passport");
+const passpor = require("./index_passport");
 // connecting to the mongoDB
 mongoose.connect("mongodb://localhost:27017/SkaraDB", {
   useNewUrlParser: true,
@@ -58,42 +59,19 @@ db.once("open", function () {
   console.log("Database connected");
 });
 
-
 // Requiring the models
 const classroom = require("./models/classroomModel.js");
 const student = require("./models/studentModel.js");
 const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
 
-// // passport plug in of the students
-// passport.use("local",
-//   new localStrategy((username, password, done) => {
-//     console.log("inside strategy");
-//     student.findOne({ username: username }, (err, user) => {
-//       console.log(user,"inside strategy");
-//       if (err) throw err;
-//       if (!user) return done(null, false);
-//       else{
-//       bcrypt.compare(password, user.password,(err,result)=>{
-//         if (err) throw err;
-//         if (result === true) {
-//           return done(null, user);
-//         } else {
-//           return done(null, false);
-//         }
-//       });
-//     }
-//     });
-//   })
-// );
-
 passport.serializeUser(function (user, done) {
   done(null, user.id);
 });
 passport.deserializeUser(function (id, done) {
-  student.findOne({_id:id},(err,user)=>{
-    done(err,user);
-  })
+  student.findOne({ _id: id }, (err, user) => {
+    done(err, user);
+  });
 });
 // passport.deserializeUser(function (id, done) {
 //   teacher.findOne({_id:id},(err,user)=>{
@@ -116,19 +94,16 @@ passport.deserializeUser(function (id, done) {
 //   })
 // });
 
-app.get("/logout",function(req,res){
-// console.log(isAuthenticated());  
-    // if (req.se) {
-    console.log(req.session);    
-    req.logout()
-        res.status(200).json({Text:Logout})
-    // } else {
-        // res.send({ msg: 'no user to log out' })
-    // }
-
-})
-
-
+app.get("/logout", function (req, res) {
+  // console.log(isAuthenticated());
+  // if (req.se) {
+  console.log(req.session);
+  req.logout();
+  res.status(200).json({ Text: Logout });
+  // } else {
+  // res.send({ msg: 'no user to log out' })
+  // }
+});
 
 // Post request to the teacher signup route
 app.post("/teachersignup", async function (req, res) {
@@ -151,22 +126,21 @@ app.post("/teachersignup", async function (req, res) {
           classesEnrolled: [],
           invitesPending: [],
           username: req.body.username,
-          pw: hashedPassword
+          pw: hashedPassword,
         });
         await newTeacher.save();
         res.status(200).json({ username: req.body.username });
       }
     }
   );
-
 });
 
 // handles login for teacher when they login
-app.post("/teacherlogin", function (req, res,next) {
-  const enteredDetails={
-    username:req.body.username,
-    pw:req.body.password
-  }
+app.post("/teacherlogin", function (req, res, next) {
+  const enteredDetails = {
+    username: req.body.username,
+    pw: req.body.password,
+  };
   const user = new teacher({
     username: req.body.username,
     password: req.body.password,
@@ -178,26 +152,33 @@ app.post("/teacherlogin", function (req, res,next) {
         console.log(err);
       } else {
         if (foundUser) {
-          await bcrypt.compare(enteredDetails.pw, foundUser.pw, function(err, result) {
-          if (result===true) {
-            console.log("user found");
-            
-             req.logIn(user, (err) => {
-              if (err) {
-                return next(err);
+          await bcrypt.compare(
+            enteredDetails.pw,
+            foundUser.pw,
+            function (err, result) {
+              if (result === true) {
+                console.log("user found");
+
+                req.logIn(user, (err) => {
+                  if (err) {
+                    return next(err);
+                  }
+                  return res
+                    .status(200)
+                    .json({ username: enteredDetails.username });
+                });
+              } else {
+                console.log("Enter correct password");
               }
-              return res.status(200).json({ username: enteredDetails.username });
-            });
-          } else {
-            console.log("Enter correct password");
-          }
-          });
+            }
+          );
         } else {
           console.log("email id does not exist");
         }
-      }req.session.passport=user;
+      }
+      req.session.passport = user;
       // console.log(req.isAuthenticated());
-      console.log(req.session); 
+      console.log(req.session);
     }
   );
 
@@ -208,8 +189,8 @@ app.post("/teacherlogin", function (req, res,next) {
   //   }
   //   // if (!user) {
   //   //   return res.status(201).json({ Text: "No such User exists." });
-  //   // } 
-    
+  //   // }
+
   // else {
   //     req.logIn(user, (err) => {
   //       if (err) {
@@ -220,15 +201,16 @@ app.post("/teacherlogin", function (req, res,next) {
   //     });
   //   }
   // })(req, res, next);
-  
 });
 
 // Post request to the student signup route.
-app.post("/studentsignup", async function (req, res) {
+app.post("/studentsignup", function (req, res) {
   student.findOne(
     { username: req.body.username },
-    async function (err, currentStudent) {
-      if (err) throw err;
+    function (err, currentStudent) {
+      if (err) {
+        console.log(err);
+      }
       if (currentStudent) {
         res.status(201).json({ Text: "This SID has already been registered." });
       }
@@ -236,15 +218,19 @@ app.post("/studentsignup", async function (req, res) {
         if (req.body.password === "") {
           res.status(201).json({ Message: "Enter a valid password." });
         }
-        const hashedPassword = await bcrypt.hash(req.body.password, 10);
-        const newStudent = new student({
-          username: req.body.username,
-          password: hashedPassword,
-          firstName: req.body.fn,
-          lastName: req.body.ln,
-          classesEnrolled: [],
+        bcrypt.hash(req.body.pw, 10, function (err, hashedPassword) {
+          if (err) {
+            console.log(err);
+          }
+          const newStudent = new student({
+            username: req.body.username,
+            password: hashedPassword,
+            firstName: req.body.fn,
+            lastName: req.body.ln,
+            classesEnrolled: [],
+          });
+          newStudent.save();
         });
-        await newStudent.save();
         res.status(200).json({ username: req.body.username });
       }
     }
@@ -252,86 +238,49 @@ app.post("/studentsignup", async function (req, res) {
 });
 
 // Post request to the login route.
-app.post("/studentlogin",  function(req, res) {
-//   console.log('routes/user.js, login, req.body: ');
-//   console.log(req.body)
-//   next()
-// },
-const enteredDetails={
-  username:req.body.username,
-  password:req.body.password
-}
-const user = new teacher({
-  username: req.body.username,
-  password: req.body.password,
-});
-student.findOne(
-  { username: enteredDetails.username },
-  async function (err, foundUser) {
-    if (err) {
-      console.log(err);
-    } else {
-      if (foundUser) {
-        await bcrypt.compare(enteredDetails.password, foundUser.password, function(err, result) {
-        if (result===true) {
-          console.log("user found");
-          
-           req.logIn(user, (err) => {
-            if (err) {
-              return next(err);
-            }
-            return res.status(200).json({ username: enteredDetails.username });
-          });
-        } else {
-          console.log("Enter correct password");
-        }
-        });
+app.post("/studentlogin", function (req, res) {
+  //   console.log('routes/user.js, login, req.body: ');
+  //   console.log(req.body)
+  //   next()
+  // },
+  const enteredDetails = {
+    username: req.body.username,
+    password: req.body.password,
+  };
+  const user = new student({
+    username: req.body.username,
+    password: req.body.password,
+  });
+  student.findOne(
+    { username: enteredDetails.username },
+    async function (err, foundUser) {
+      if (err) {
+        console.log(err);
       } else {
-        console.log("sid does not exist");
+        if (foundUser) {
+          await bcrypt.compare(
+            enteredDetails.password,
+            foundUser.password,
+            function (err, result) {
+              if (result === true) {
+                console.log("user found");
+                const token = jwt.sign({ _id: foundUser._id }, "secret");
+                res.cookie("jwt", token, {
+                  httpOnly: true,
+                  maxAge: 24 * 60 * 60 * 60 * 1000,
+                });
+                res.status(200).json({ username: enteredDetails.username });
+              } else {
+                console.log("Enter correct password");
+              }
+            }
+          );
+        } else {
+          console.log("sid does not exist");
+        }
       }
     }
-    // req.session.passport=user;
-    // console.log(req.isAuthenticated());
-    console.log(req.session); 
-  })
-// );
-  // const user = new student({
-  //   username: req.body.username,
-  //   password: req.body.password,
-  // });
-  // console.log(user,"outside auth");
- 
-  // passpor.authenticate("local", (err,user,info) => {
-    // console.log(req.user, "inside auth");
-    // console.log(user)
-    // if (err) {
-    //   return next(err);
-    // }
-    // if (!user) {
-    //   return res.status(201).json({ Text: "No such User exists." });
-    // } else {
-    //   req.logIn(user, (err) => {
-    //     if (err) {
-    //       return next(err);
-    //     }
-  //   var userInfo={
-  //     flag:false,
-  //     username:""
-  //   }
-  //   userInfo={
-  //   flag:true, 
-  //   username:user.username
-  //  };
-  
-        // console.log(req.user);
-      // });
-      // console.log(req.session.passport);    // }
-  // })
-  // res.status(200).json({ username: userInfo });
-  // console.log()
-
-  // (req, res, next);
-
+  );
 });
 
 // ..............................................................
@@ -487,10 +436,14 @@ app.get("/team/:username/:id", function (req, res) {
 });
 
 // get request from the server based on the parameters to display dashboard
-app.get("/user", function (req, res) {
-  console.log(req.query);
+app.get("/studentdashboard", function (req, res) {
+  const cookie = req.cookies["jwt"];
+  const claims = jwt.verify(cookie, "secret");
+  if (!claims) {
+    res.status(404).json({ message: "Unauthorized" });
+  }
   var q = student
-    .findOne({ sid: req.query.sid })
+    .findOne({ _id: claims._id })
     .populate("classesEnrolled")
     .exec(function (err, currentStudent) {
       if (err) {
@@ -520,8 +473,6 @@ app.get("/classroom", function (req, res) {
       }
     });
 });
-
-
 
 // Listening to the port PORT.
 app.listen(PORT, function () {
