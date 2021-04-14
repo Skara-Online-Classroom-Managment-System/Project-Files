@@ -1,26 +1,34 @@
 import React from 'react';
-// import { useHistory } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 import { Navbar, Nav, NavDropdown } from 'react-bootstrap';
 
 export default function HomeNav(props) {
-  const [name,setName]=React.useState(props.name);
-  if(name){
+
+  const logout=async()=>{
+    await fetch("http://localhost:5000/logout", {
+      method:"POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include"
+    });
+    props.setName("");
+  }
+  if(props.name){
   return (
     <Navbar bg="light" expand="lg">
       <Navbar.Brand href="#home">Skara Classroom Manager</Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
         <Nav className="mr-auto">
-        <Nav>Hi{name}</Nav>
+        <Nav>Hi {props.name}</Nav>
           <Nav.Link href="#home">About</Nav.Link>
           <Nav.Link href="#link">Developers</Nav.Link>
-          <Nav.Link href="#link">LogOut</Nav.Link>
+          <Nav.Link href="/" onClick={logout}>LogOut</Nav.Link>
         </Nav>
       </Navbar.Collapse>
     </Navbar>
   );}
   else{
-    (
+    return(
       <Navbar bg="light" expand="lg">
       <Navbar.Brand href="#home">Skara Classroom Manager</Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />

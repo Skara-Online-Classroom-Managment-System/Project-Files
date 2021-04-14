@@ -1,6 +1,6 @@
 // Importing the basic React Model
 import React from "react";
-import { BrowserRouter, Route } from "react-router-dom";
+import { BrowserRouter, Route ,Redirect} from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import Home from "./Home/Home.jsx";
@@ -18,10 +18,32 @@ import TeamPane from "./Team/TeamPane";
 
 // Defining the App component
 function App() {
+  const[name,setName]=React.useState("");
+  React.useEffect(()=>{
+    (
+      async ()=>{
+          const response=await fetch("http://localhost:5000/user", {
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
+          
+          if(response.status===401){
+           <Redirect to="/"/> 
+          }
+          else{
+          const content=await response.json();
+          if(content.data.fn){
+          setName(content.data.fn);
+        }
+          }
+    }
+    
+    )()
+  })
   return (
     <div>
       <BrowserRouter>
-        <Route exact path="/" component={Home} />
+        <Route exact path="/" component={()=><Home name={name} setName={setName}/>} />
         <Route exact path="/studentlogin" component={StudentLogin} />
         <Route exact path="/studentsignup" component={StudentSignup} />
         <Route exact path="/teacherlogin" component={TeacherLogin} />

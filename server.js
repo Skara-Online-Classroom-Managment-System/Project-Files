@@ -51,12 +51,32 @@ const student = require("./models/studentModel.js");
 const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
 
-app.get("/logout", function (req, res) {
-  // console.log(req.session);
-  req.logout();
-  res.status(200).json({ Text: "Logout" });
-
+app.post("/logout", function (req, res) {
+ res.cookie('jwt','',{maxAge:0});
+console.log("cookie deleted");
 });
+
+app.get("/user",async(req,res)=>{
+  try{
+  const cookie=req.cookies['jwt'];
+  const claims=jwt.verify(cookie,"secret");
+  if(!claims){
+    return res.status(401).json({Text:"Unauthenticated"})
+    }
+    const students=await student.findOne({_id:claims._id});
+    const teachers=await teacher.findOne({_id:claims._id});
+    if(students){
+    const{password,...data}=await students.toJSON();
+    return res.status(200).json({"data":data});
+  }
+  if(teachers){
+    const{pw,...data}=await teachers.toJSON();
+    return res.status(200).json({"data":data});
+  }
+}catch(e){
+    return res.status(401).json({Text:"Unauthenticated"})  
+}
+})
 
 // Post request to the teacher signup route
 app.post("/teachersignup", async function (req, res) {
