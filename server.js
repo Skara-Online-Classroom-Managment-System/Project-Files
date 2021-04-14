@@ -9,7 +9,6 @@ const path = require("path");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
-
 const MongoStore = require('connect-mongo')
 
 // Define the PORT
@@ -40,11 +39,10 @@ app.use(
     saveUninitialized: false,
   })
 );
-// mongoUrl: "mongodb://localhost/SkaraDB"
 app.use(cookieParser("Our little secret."));
 app.use(passport.initialize());
 app.use(passport.session());
-const passpor=require("./index_passport");
+
 // connecting to the mongoDB
 mongoose.connect("mongodb://localhost:27017/SkaraDB", {
   useNewUrlParser: true,
@@ -52,6 +50,7 @@ mongoose.connect("mongodb://localhost:27017/SkaraDB", {
   useFindAndModify: false,
   useCreateIndex: true,
 });
+
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", function () {
@@ -65,67 +64,10 @@ const student = require("./models/studentModel.js");
 const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
 
-// // passport plug in of the students
-// passport.use("local",
-//   new localStrategy((username, password, done) => {
-//     console.log("inside strategy");
-//     student.findOne({ username: username }, (err, user) => {
-//       console.log(user,"inside strategy");
-//       if (err) throw err;
-//       if (!user) return done(null, false);
-//       else{
-//       bcrypt.compare(password, user.password,(err,result)=>{
-//         if (err) throw err;
-//         if (result === true) {
-//           return done(null, user);
-//         } else {
-//           return done(null, false);
-//         }
-//       });
-//     }
-//     });
-//   })
-// );
-
-passport.serializeUser(function (user, done) {
-  done(null, user.id);
-});
-passport.deserializeUser(function (id, done) {
-  student.findOne({_id:id},(err,user)=>{
-    done(err,user);
-  })
-});
-// passport.deserializeUser(function (id, done) {
-//   teacher.findOne({_id:id},(err,user)=>{
-//     done(err,user);
-//   })
-// });
-// passport plug in of the teachers
-// passport.use(teacher.createStrategy());
-// passport.serializeUser(teacher.serializeUser());
-// passport.deserializeUser(teacher.deserializeUser());
-// passport.use(student.createStrategy());
-// passport.serializeUser(student.serializeUser());
-// passport.deserializeUser(student.deserializeUser());
-// passport.serializeUser(function (teacher, cb) {
-//   cb(null, teacher._id);
-//   });
-//   passport.deserializeUser(function (id, cb) {
-//   teacher.findOne({_id:id},(err,user)=>{
-//     cb(err,user);
-//   })
-// });
-
 app.get("/logout",function(req,res){
-// console.log(isAuthenticated());  
-    // if (req.se) {
     console.log(req.session);    
     req.logout()
-        res.status(200).json({Text:Logout})
-    // } else {
-        // res.send({ msg: 'no user to log out' })
-    // }
-
+        res.status(200).json({Text:"Logout"})
 })
 
 
@@ -185,9 +127,15 @@ app.post("/teacherlogin", function (req, res,next) {
              req.logIn(user, (err) => {
               if (err) {
                 return next(err);
+              }   console.log(req.session,"inside login");
+              req.session.save();
+              const data={
+                username:enteredDetails.username,
+                id:req.session.passport.user
               }
-              return res.status(200).json({ username: enteredDetails.username });
+               res.status(200).json({ obj:data  });
             });
+            console.log("outside: ",req.session);
           } else {
             console.log("Enter correct password");
           }
@@ -195,31 +143,11 @@ app.post("/teacherlogin", function (req, res,next) {
         } else {
           console.log("email id does not exist");
         }
-      }req.session.passport=user;
-      // console.log(req.isAuthenticated());
-      console.log(req.session); 
+
+      }
+      console.log(req.session,"outside");
     }
   );
-
-  // passport.authenticate("local", (err, user, info) => {
-  //   console.log(user, "inside auth");
-  //   if (err) {
-  //     return next(err);
-  //   }
-  //   // if (!user) {
-  //   //   return res.status(201).json({ Text: "No such User exists." });
-  //   // } 
-    
-  // else {
-  //     req.logIn(user, (err) => {
-  //       if (err) {
-  //         return next(err);
-  //       }
-  //       return res.status(200).json({ username:user.username });
-  //       console.log(req.user);
-  //     });
-  //   }
-  // })(req, res, next);
   
 });
 
@@ -253,10 +181,6 @@ app.post("/studentsignup", async function (req, res) {
 
 // Post request to the login route.
 app.post("/studentlogin",  function(req, res) {
-//   console.log('routes/user.js, login, req.body: ');
-//   console.log(req.body)
-//   next()
-// },
 const enteredDetails={
   username:req.body.username,
   password:req.body.password
@@ -290,48 +214,8 @@ student.findOne(
         console.log("sid does not exist");
       }
     }
-    // req.session.passport=user;
-    // console.log(req.isAuthenticated());
     console.log(req.session); 
   })
-// );
-  // const user = new student({
-  //   username: req.body.username,
-  //   password: req.body.password,
-  // });
-  // console.log(user,"outside auth");
- 
-  // passpor.authenticate("local", (err,user,info) => {
-    // console.log(req.user, "inside auth");
-    // console.log(user)
-    // if (err) {
-    //   return next(err);
-    // }
-    // if (!user) {
-    //   return res.status(201).json({ Text: "No such User exists." });
-    // } else {
-    //   req.logIn(user, (err) => {
-    //     if (err) {
-    //       return next(err);
-    //     }
-  //   var userInfo={
-  //     flag:false,
-  //     username:""
-  //   }
-  //   userInfo={
-  //   flag:true, 
-  //   username:user.username
-  //  };
-  
-        // console.log(req.user);
-      // });
-      // console.log(req.session.passport);    // }
-  // })
-  // res.status(200).json({ username: userInfo });
-  // console.log()
-
-  // (req, res, next);
-
 });
 
 // ..............................................................
@@ -450,6 +334,7 @@ app.post("/addclass", function (req, res) {
 
 //////////////////////////////////////////////////////////////////////////
 app.get("/dashboard/:username", function (req, res) {
+  console.log(req.session);
   teacher
     .findOne({ username: req.params.username })
     .populate("classesEnrolled")

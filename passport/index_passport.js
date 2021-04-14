@@ -1,6 +1,6 @@
 const passport = require("passport");
 const LocalStrategy = require('./passportConfig')
-const User = require('./models/studentModel')
+const User = require('../models/teacherModel')
 
 // called on login, saves the id to session req.session.passport.user = {id:'..'}
 passport.serializeUser((user, done) => {
