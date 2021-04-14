@@ -1,17 +1,12 @@
 // Importing the modules
 const express = require("express");
 const mongoose = require("mongoose");
-const session = require("express-session");
-const passport = require("passport");
-const localStrategy = require("passport-local").Strategy;
 const morgan = require("morgan");
 const path = require("path");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
-const MongoStore = require("connect-mongo");
 
 // Define the PORT
 const PORT = 5000;
@@ -33,19 +28,9 @@ app.use(
     credentials: true,
   })
 );
-app.use(
-  session({
-    secret: "Our little secret.",
-    store: MongoStore.create({ mongoUrl: "mongodb://localhost:27017/SkaraDB" }),
-    resave: false,
-    saveUninitialized: false,
-  })
-);
-// mongoUrl: "mongodb://localhost/SkaraDB"
+
 app.use(cookieParser());
-app.use(passport.initialize());
-app.use(passport.session());
-const passpor = require("./index_passport");
+
 // connecting to the mongoDB
 mongoose.connect("mongodb://localhost:27017/SkaraDB", {
   useNewUrlParser: true,
@@ -64,35 +49,6 @@ const classroom = require("./models/classroomModel.js");
 const student = require("./models/studentModel.js");
 const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
-
-passport.serializeUser(function (user, done) {
-  done(null, user.id);
-});
-passport.deserializeUser(function (id, done) {
-  student.findOne({ _id: id }, (err, user) => {
-    done(err, user);
-  });
-});
-// passport.deserializeUser(function (id, done) {
-//   teacher.findOne({_id:id},(err,user)=>{
-//     done(err,user);
-//   })
-// });
-// passport plug in of the teachers
-// passport.use(teacher.createStrategy());
-// passport.serializeUser(teacher.serializeUser());
-// passport.deserializeUser(teacher.deserializeUser());
-// passport.use(student.createStrategy());
-// passport.serializeUser(student.serializeUser());
-// passport.deserializeUser(student.deserializeUser());
-// passport.serializeUser(function (teacher, cb) {
-//   cb(null, teacher._id);
-//   });
-//   passport.deserializeUser(function (id, cb) {
-//   teacher.findOne({_id:id},(err,user)=>{
-//     cb(err,user);
-//   })
-// });
 
 app.get("/logout", function (req, res) {
   // console.log(isAuthenticated());
@@ -181,26 +137,6 @@ app.post("/teacherlogin", function (req, res, next) {
       console.log(req.session);
     }
   );
-
-  // passport.authenticate("local", (err, user, info) => {
-  //   console.log(user, "inside auth");
-  //   if (err) {
-  //     return next(err);
-  //   }
-  //   // if (!user) {
-  //   //   return res.status(201).json({ Text: "No such User exists." });
-  //   // }
-
-  // else {
-  //     req.logIn(user, (err) => {
-  //       if (err) {
-  //         return next(err);
-  //       }
-  //       return res.status(200).json({ username:user.username });
-  //       console.log(req.user);
-  //     });
-  //   }
-  // })(req, res, next);
 });
 
 // Post request to the student signup route.
@@ -264,7 +200,10 @@ app.post("/studentlogin", function (req, res) {
             function (err, result) {
               if (result === true) {
                 console.log("user found");
-                const token = jwt.sign({ _id: foundUser._id }, "secret");
+                const token = jwt.sign(
+                  { _id: foundUser._id, type: 1 },
+                  "secret"
+                );
                 res.cookie("jwt", token, {
                   httpOnly: true,
                   maxAge: 24 * 60 * 60 * 60 * 1000,
@@ -355,10 +294,14 @@ app.post("/createAnnouncement/:username/:id", function (req, res) {
 });
 
 app.post("/addclass", function (req, res) {
-  const sid = req.body.sid;
+  const cookie = req.cookies["jwt"];
+  const claims = jwt.verify(cookie, "secret");
+  if (!claims || claims.type === 2) {
+    res.status(404).json({ message: "Unauthorized" });
+  }
   const classCode = req.body.classCode;
   var query = student
-    .findOne({ sid: sid })
+    .findOne({ _id: claims._id })
     .populate("classesEnrolled")
     .exec(function (err, currentStudent) {
       if (err) {
@@ -385,6 +328,8 @@ app.post("/addclass", function (req, res) {
                   currentStudent.classesEnrolled.push(currentClassroom);
                   currentStudent.save();
                   currentClassroom.save();
+                  // console.log(currentClassroom.studentsEnrolled);
+                  // console.log(currentStudent.classesEnrolled);
                   res.status(200).json({ text: "Success" });
                 } else {
                   res.status(201).json({ text: "Class not found" });
@@ -411,30 +356,6 @@ app.get("/dashboard/:username", function (req, res) {
     });
 });
 
-// display info of a particular class
-app.get("/classpane/:username/:id", function (req, res) {
-  classroom.findOne({ classCode: req.params.id }, function (err, foundClass) {
-    if (err) {
-      console.log(err);
-    } else {
-      res.status(200).json({ class: foundClass });
-    }
-  });
-});
-
-app.get("/team/:username/:id", function (req, res) {
-  classroom
-    .findOne({ classCode: req.params.id })
-    .populate("teams")
-    .exec(function (err, foundClass) {
-      if (err) {
-        console.log(err);
-      } else {
-        res.status(200).json({ teams: foundClass.teams });
-      }
-    });
-});
-
 // get request from the server based on the parameters to display dashboard
 app.get("/studentdashboard", function (req, res) {
   const cookie = req.cookies["jwt"];
@@ -449,7 +370,8 @@ app.get("/studentdashboard", function (req, res) {
       if (err) {
         res.send(err);
       } else {
-        res.status(200).json(currentStudent);
+        var { _id, password, ...details } = currentStudent._doc;
+        res.status(200).json(details);
       }
     });
 });

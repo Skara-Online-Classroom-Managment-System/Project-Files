@@ -26,8 +26,8 @@ function App() {
         <Route exact path="/studentsignup" component={StudentSignup} />
         <Route exact path="/teacherlogin" component={TeacherLogin} />
         <Route exact path="/teachersignup" component={TeacherSignup} />
-        <Route exact path="/student/:sid" component={DashboardStudent} />
         <Route exact path="/studentdashboard/" component={DashboardStudent} />
+        <Route exact path="/classroom/:pos" component={ClassroomStudent} />
         <Route exact path="/dashboard/:username" component={DashboardTeacher} />
         <Route
           exact
