@@ -2,11 +2,26 @@ import React from 'react';
 // import { useHistory } from 'react-router-dom';
 import { Navbar, Nav, NavDropdown } from 'react-bootstrap';
 
-export default function HomeNav() {
-  
-  // const history = useHistory();
+export default function HomeNav(props) {
+  const [name,setName]=React.useState(props.name);
+  if(name){
   return (
     <Navbar bg="light" expand="lg">
+      <Navbar.Brand href="#home">Skara Classroom Manager</Navbar.Brand>
+      <Navbar.Toggle aria-controls="basic-navbar-nav" />
+      <Navbar.Collapse id="basic-navbar-nav">
+        <Nav className="mr-auto">
+        <Nav>Hi{name}</Nav>
+          <Nav.Link href="#home">About</Nav.Link>
+          <Nav.Link href="#link">Developers</Nav.Link>
+          <Nav.Link href="#link">LogOut</Nav.Link>
+        </Nav>
+      </Navbar.Collapse>
+    </Navbar>
+  );}
+  else{
+    (
+      <Navbar bg="light" expand="lg">
       <Navbar.Brand href="#home">Skara Classroom Manager</Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
@@ -26,5 +41,6 @@ export default function HomeNav() {
         </Nav>
       </Navbar.Collapse>
     </Navbar>
-  );
+    )
+  }
 }

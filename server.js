@@ -1,15 +1,12 @@
 // Importing the modules
 const express = require("express");
 const mongoose = require("mongoose");
-const session = require("express-session");
-const passport = require("passport");
-const localStrategy = require("passport-local").Strategy;
 const morgan = require("morgan");
 const path = require("path");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
-const MongoStore = require('connect-mongo')
+const jwt = require("jsonwebtoken");
 
 // Define the PORT
 const PORT = 5000;
@@ -31,17 +28,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(
-  session({
-    secret: "Our little secret.",
-    store: MongoStore.create({ mongoUrl:"mongodb://localhost:27017/SkaraDB" }),
-    resave: false,
-    saveUninitialized: false,
-  })
-);
-app.use(cookieParser("Our little secret."));
-app.use(passport.initialize());
-app.use(passport.session());
+
+app.use(cookieParser());
 
 // connecting to the mongoDB
 mongoose.connect("mongodb://localhost:27017/SkaraDB", {
@@ -52,11 +40,10 @@ mongoose.connect("mongodb://localhost:27017/SkaraDB", {
 });
 
 const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
+db.on("error", console. error.bind(console, "connection error:"));
 db.once("open", function () {
   console.log("Database connected");
 });
-
 
 // Requiring the models
 const classroom = require("./models/classroomModel.js");
@@ -64,13 +51,12 @@ const student = require("./models/studentModel.js");
 const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
 
-app.get("/logout",function(req,res){
-    console.log(req.session);    
-    req.logout()
-        res.status(200).json({Text:"Logout"})
-})
+app.get("/logout", function (req, res) {
+  // console.log(req.session);
+  req.logout();
+  res.status(200).json({ Text: "Logout" });
 
-
+});
 
 // Post request to the teacher signup route
 app.post("/teachersignup", async function (req, res) {
@@ -93,26 +79,21 @@ app.post("/teachersignup", async function (req, res) {
           classesEnrolled: [],
           invitesPending: [],
           username: req.body.username,
-          pw: hashedPassword
+          pw: hashedPassword,
         });
         await newTeacher.save();
         res.status(200).json({ username: req.body.username });
       }
     }
   );
-
 });
 
 // handles login for teacher when they login
-app.post("/teacherlogin", function (req, res,next) {
-  const enteredDetails={
-    username:req.body.username,
-    pw:req.body.password
-  }
-  const user = new teacher({
+app.post("/teacherlogin", function (req, res, next) {
+  const enteredDetails = {
     username: req.body.username,
-    password: req.body.password,
-  });
+    pw: req.body.password,
+  };
   teacher.findOne(
     { username: enteredDetails.username },
     async function (err, foundUser) {
@@ -120,43 +101,42 @@ app.post("/teacherlogin", function (req, res,next) {
         console.log(err);
       } else {
         if (foundUser) {
-          await bcrypt.compare(enteredDetails.pw, foundUser.pw, function(err, result) {
-          if (result===true) {
-            console.log("user found");
-            
-             req.logIn(user, (err) => {
-              if (err) {
-                return next(err);
-              }   console.log(req.session,"inside login");
-              req.session.save();
-              const data={
-                username:enteredDetails.username,
-                id:req.session.passport.user
+          await bcrypt.compare(
+            enteredDetails.pw,
+            foundUser.pw,
+            function (err, result) {
+              if (result === true) {
+                console.log("user found");
+                const token = jwt.sign(
+                  { _id: foundUser._id, type: 1 },
+                  "secret"
+                );
+                res.cookie("jwt", token, {
+                  httpOnly: true,
+                  maxAge: 24 * 60 * 60 * 1000,
+                });
+                res.status(200).json({username:enteredDetails.username});
+              } else {
+                console.log("Enter correct password");
               }
-               res.status(200).json({ obj:data  });
-            });
-            console.log("outside: ",req.session);
-          } else {
-            console.log("Enter correct password");
-          }
-          });
+            }
+          );
         } else {
           console.log("email id does not exist");
         }
-
       }
-      console.log(req.session,"outside");
     }
   );
-  
 });
 
 // Post request to the student signup route.
-app.post("/studentsignup", async function (req, res) {
+app.post("/studentsignup", function (req, res) {
   student.findOne(
     { username: req.body.username },
-    async function (err, currentStudent) {
-      if (err) throw err;
+    function (err, currentStudent) {
+      if (err) {
+        console.log(err);
+      }
       if (currentStudent) {
         res.status(201).json({ Text: "This SID has already been registered." });
       }
@@ -164,15 +144,19 @@ app.post("/studentsignup", async function (req, res) {
         if (req.body.password === "") {
           res.status(201).json({ Message: "Enter a valid password." });
         }
-        const hashedPassword = await bcrypt.hash(req.body.password, 10);
-        const newStudent = new student({
-          username: req.body.username,
-          password: hashedPassword,
-          firstName: req.body.fn,
-          lastName: req.body.ln,
-          classesEnrolled: [],
+        bcrypt.hash(req.body.pw, 10, function (err, hashedPassword) {
+          if (err) {
+            console.log(err);
+          }
+          const newStudent = new student({
+            username: req.body.username,
+            password: hashedPassword,
+            firstName: req.body.fn,
+            lastName: req.body.ln,
+            classesEnrolled: [],
+          });
+          newStudent.save();
         });
-        await newStudent.save();
         res.status(200).json({ username: req.body.username });
       }
     }
@@ -180,42 +164,48 @@ app.post("/studentsignup", async function (req, res) {
 });
 
 // Post request to the login route.
-app.post("/studentlogin",  function(req, res) {
-const enteredDetails={
-  username:req.body.username,
-  password:req.body.password
-}
-const user = new teacher({
-  username: req.body.username,
-  password: req.body.password,
-});
-student.findOne(
-  { username: enteredDetails.username },
-  async function (err, foundUser) {
-    if (err) {
-      console.log(err);
-    } else {
-      if (foundUser) {
-        await bcrypt.compare(enteredDetails.password, foundUser.password, function(err, result) {
-        if (result===true) {
-          console.log("user found");
-          
-           req.logIn(user, (err) => {
-            if (err) {
-              return next(err);
-            }
-            return res.status(200).json({ username: enteredDetails.username });
-          });
-        } else {
-          console.log("Enter correct password");
-        }
-        });
+app.post("/studentlogin", function (req, res) {
+  //   console.log('routes/user.js, login, req.body: ');
+  //   console.log(req.body)
+  //   next()
+  // },
+  const enteredDetails = {
+    username: req.body.username,
+    password: req.body.password,
+  };
+  student.findOne(
+    { username: enteredDetails.username },
+    async function (err, foundUser) {
+      if (err) {
+        console.log(err);
       } else {
-        console.log("sid does not exist");
+        if (foundUser) {
+          await bcrypt.compare(
+            enteredDetails.password,
+            foundUser.password,
+            function (err, result) {
+              if (result === true) {
+                console.log("user found");
+                const token = jwt.sign(
+                  { _id: foundUser._id, type: 1 },
+                  "secret"
+                );
+                res.cookie("jwt", token, {
+                  httpOnly: true,
+                  maxAge: 24 * 60 * 60 * 60 * 1000,
+                });
+                res.status(200).json({ username: enteredDetails.username });
+              } else {
+                console.log("Enter correct password");
+              }
+            }
+          );
+        } else {
+          console.log("sid does not exist");
+        }
       }
     }
-    console.log(req.session); 
-  })
+  );
 });
 
 // ..............................................................
@@ -290,10 +280,14 @@ app.post("/createAnnouncement/:username/:id", function (req, res) {
 });
 
 app.post("/addclass", function (req, res) {
-  const sid = req.body.sid;
+  const cookie = req.cookies["jwt"];
+  const claims = jwt.verify(cookie, "secret");
+  if (!claims || claims.type === 2) {
+    res.status(404).json({ message: "Unauthorized" });
+  }
   const classCode = req.body.classCode;
   var query = student
-    .findOne({ sid: sid })
+    .findOne({ _id: claims._id })
     .populate("classesEnrolled")
     .exec(function (err, currentStudent) {
       if (err) {
@@ -320,6 +314,8 @@ app.post("/addclass", function (req, res) {
                   currentStudent.classesEnrolled.push(currentClassroom);
                   currentStudent.save();
                   currentClassroom.save();
+                  // console.log(currentClassroom.studentsEnrolled);
+                  // console.log(currentStudent.classesEnrolled);
                   res.status(200).json({ text: "Success" });
                 } else {
                   res.status(201).json({ text: "Class not found" });
@@ -347,41 +343,22 @@ app.get("/dashboard/:username", function (req, res) {
     });
 });
 
-// display info of a particular class
-app.get("/classpane/:username/:id", function (req, res) {
-  classroom.findOne({ classCode: req.params.id }, function (err, foundClass) {
-    if (err) {
-      console.log(err);
-    } else {
-      res.status(200).json({ class: foundClass });
-    }
-  });
-});
-
-app.get("/team/:username/:id", function (req, res) {
-  classroom
-    .findOne({ classCode: req.params.id })
-    .populate("teams")
-    .exec(function (err, foundClass) {
-      if (err) {
-        console.log(err);
-      } else {
-        res.status(200).json({ teams: foundClass.teams });
-      }
-    });
-});
-
 // get request from the server based on the parameters to display dashboard
-app.get("/user", function (req, res) {
-  console.log(req.query);
+app.get("/studentdashboard", function (req, res) {
+  const cookie = req.cookies["jwt"];
+  const claims = jwt.verify(cookie, "secret");
+  if (!claims) {
+    res.status(404).json({ message: "Unauthorized" });
+  }
   var q = student
-    .findOne({ sid: req.query.sid })
+    .findOne({ _id: claims._id })
     .populate("classesEnrolled")
     .exec(function (err, currentStudent) {
       if (err) {
         res.send(err);
       } else {
-        res.status(200).json(currentStudent);
+        var { _id, password, ...details } = currentStudent._doc;
+        res.status(200).json(details);
       }
     });
 });
@@ -405,8 +382,6 @@ app.get("/classroom", function (req, res) {
       }
     });
 });
-
-
 
 // Listening to the port PORT.
 app.listen(PORT, function () {

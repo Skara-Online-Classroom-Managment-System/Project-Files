@@ -1,29 +1,32 @@
-import axios from "axios";
+
 import React from "react";
-import { useHistory } from "react-router-dom";
+import {Redirect} from 'react-router-dom';
 
 export default function TeacherLogin() {
   const [details, setDetails] = React.useState({
     username: String,
     password: String,
   });
-
-  const history = useHistory();
-  function handleSubmit() {
-    axios({
+const[redirect,setRedirect]=React.useState(false);
+  async function handleSubmit() {
+    const response = await fetch("http://localhost:5000/teacherlogin", {
       method: "POST",
-      data: {
-        username: details.username,
-        password: details.password,
-      },
-      withCredentials: true,
-      url: "http://localhost:5000/teacherlogin",
-    }).then((res) => {
-      var queryExtender = res.data.username;
-      history.push("/dashboard/" + queryExtender);
-
-      // console.log(res,"teacherlogin");
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        ...details,
+      }),
     });
+    const content = await response.json();
+    if (response.status === 201) {
+      console.log(content);
+    } else {
+      setRedirect(true);
+      console.log(content);
+    }
+  }
+  if (redirect) {
+    return <Redirect to="/teacherdashboard" />;
   }
   function handleChange(event) {
     const name = event.target.name;

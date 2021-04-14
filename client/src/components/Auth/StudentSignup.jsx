@@ -1,5 +1,6 @@
 import React from "react";
 import axios from "axios";
+import { Redirect } from "react-router-dom";
 
 export default function Register() {
   const [details, setDetails] = React.useState({
@@ -7,22 +8,28 @@ export default function Register() {
     ln: "",
     username: "",
     pw: "",
+    cpw: "",
   });
+  const [redirect, setRedirect] = React.useState(false);
 
-  function handleSubmit() {
-    axios({
+  async function handleSubmit() {
+    const response = await fetch("http://localhost:5000/studentsignup", {
       method: "POST",
-      data: {
-        fn: details.fn,
-        ln: details.ln,
-        username: details.username,
-        password: details.pw,
-      },
-      withCredentials: true,
-      url: "http://localhost:5000/studentsignup",
-    }).then((res) => {
-      console.log(res.data);
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...details,
+      }),
     });
+    const content = await response.json();
+    if (response.status === 201) {
+      console.log(content);
+    } else {
+      setRedirect(true);
+    }
+  }
+
+  if (redirect) {
+    return <Redirect to={"/studentlogin"} />;
   }
 
   function handleChange(event) {
@@ -38,6 +45,7 @@ export default function Register() {
   }
   return (
     <div>
+      <h2>Sign Up as a Student</h2>
       <form>
         <div>
           <label for="fn">First Name: </label>
@@ -71,6 +79,15 @@ export default function Register() {
           <input
             type="password"
             name="pw"
+            value={details.pw}
+            onChange={handleChange}
+          />
+        </div>
+        <div>
+          <label for="cpw">Confirm Password: </label>
+          <input
+            type="password"
+            name="cpw"
             value={details.pw}
             onChange={handleChange}
           />
