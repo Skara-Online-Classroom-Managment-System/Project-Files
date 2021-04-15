@@ -7,6 +7,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const session = require("express-session");
 
 // Define the PORT
 const PORT = 5000;
@@ -29,6 +30,15 @@ app.use(
   })
 );
 
+app.use(
+  session({
+    secret: "secret",
+    cookie: { maxAge: 12 * 60 * 60 * 60 * 1000 },
+    saveUninitialized: false,
+    resave: true,
+  })
+);
+
 app.use(cookieParser());
 
 // connecting to the mongoDB
@@ -40,7 +50,7 @@ mongoose.connect("mongodb://localhost:27017/SkaraDB", {
 });
 
 const db = mongoose.connection;
-db.on("error", console. error.bind(console, "connection error:"));
+db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", function () {
   console.log("Database connected");
 });
@@ -51,32 +61,26 @@ const student = require("./models/studentModel.js");
 const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
 
-app.post("/logout", function (req, res) {
- res.cookie('jwt','',{maxAge:0});
-console.log("cookie deleted");
+app.get("/logout", function (req, res) {
+  req.session.value = "NA";
+  req.session.destroy();
+  console.log("cookie deleted");
 });
 
-app.get("/user",async(req,res)=>{
-  try{
-  const cookie=req.cookies['jwt'];
-  const claims=jwt.verify(cookie,"secret");
-  if(!claims){
-    return res.status(401).json({Text:"Unauthenticated"})
-    }
-    const students=await student.findOne({_id:claims._id});
-    const teachers=await teacher.findOne({_id:claims._id});
-    if(students){
-    const{password,...data}=await students.toJSON();
-    return res.status(200).json({"data":data});
+app.get("/user", async (req, res) => {
+  const cookie = req.session.value;
+  const claims = jwt.verify(cookie, "secret");
+  console.log(claims);
+  if (claims.type === 1) {
+    student.findOne({ _id: claims._id }, function (err, currentStudent) {
+      if (err) {
+        console.log(err);
+      } else {
+        res.status(200).json(currentStudent);
+      }
+    });
   }
-  if(teachers){
-    const{pw,...data}=await teachers.toJSON();
-    return res.status(200).json({"data":data});
-  }
-}catch(e){
-    return res.status(401).json({Text:"Unauthenticated"})  
-}
-})
+});
 
 // Post request to the teacher signup route
 app.post("/teachersignup", async function (req, res) {
@@ -135,7 +139,7 @@ app.post("/teacherlogin", function (req, res, next) {
                   httpOnly: true,
                   maxAge: 24 * 60 * 60 * 1000,
                 });
-                res.status(200).json({username:enteredDetails.username});
+                res.status(200).json({ username: enteredDetails.username });
               } else {
                 console.log("Enter correct password");
               }
@@ -185,10 +189,6 @@ app.post("/studentsignup", function (req, res) {
 
 // Post request to the login route.
 app.post("/studentlogin", function (req, res) {
-  //   console.log('routes/user.js, login, req.body: ');
-  //   console.log(req.body)
-  //   next()
-  // },
   const enteredDetails = {
     username: req.body.username,
     password: req.body.password,
@@ -210,10 +210,8 @@ app.post("/studentlogin", function (req, res) {
                   { _id: foundUser._id, type: 1 },
                   "secret"
                 );
-                res.cookie("jwt", token, {
-                  httpOnly: true,
-                  maxAge: 24 * 60 * 60 * 60 * 1000,
-                });
+                req.session.value = token;
+                console.log(req.session.value);
                 res.status(200).json({ username: enteredDetails.username });
               } else {
                 console.log("Enter correct password");
@@ -300,7 +298,7 @@ app.post("/createAnnouncement/:username/:id", function (req, res) {
 });
 
 app.post("/addclass", function (req, res) {
-  const cookie = req.cookies["jwt"];
+  const cookie = req.session.value;
   const claims = jwt.verify(cookie, "secret");
   if (!claims || claims.type === 2) {
     res.status(404).json({ message: "Unauthorized" });
@@ -365,7 +363,7 @@ app.get("/dashboard/:username", function (req, res) {
 
 // get request from the server based on the parameters to display dashboard
 app.get("/studentdashboard", function (req, res) {
-  const cookie = req.cookies["jwt"];
+  const cookie = req.session.value;
   const claims = jwt.verify(cookie, "secret");
   if (!claims) {
     res.status(404).json({ message: "Unauthorized" });
@@ -378,6 +376,7 @@ app.get("/studentdashboard", function (req, res) {
         res.send(err);
       } else {
         var { _id, password, ...details } = currentStudent._doc;
+        console.log(details);
         res.status(200).json(details);
       }
     });
