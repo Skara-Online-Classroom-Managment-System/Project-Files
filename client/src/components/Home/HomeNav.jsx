@@ -1,11 +1,12 @@
 import React from "react";
-// import { Link } from 'react-router-dom';
+import { Redirect } from "react-router-dom";
 import { Navbar, Nav, NavDropdown } from "react-bootstrap";
 import axios from "axios";
 
 export default function HomeNav(props) {
   const [userData, setUserData] = React.useState({});
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const [logOut, setLogOut] = React.useState(false);
   React.useEffect(() => {
     axios({
       method: "GET",
@@ -27,7 +28,10 @@ export default function HomeNav(props) {
       credentials: "include",
     });
     const content = await response.json();
+    setLogOut(true);
+    console.log(logOut);
   }
+
   return (
     <Navbar bg="light" expand="lg">
       <Navbar.Brand href="#home">Skara Classroom Manager</Navbar.Brand>

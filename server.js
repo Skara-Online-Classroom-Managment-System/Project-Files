@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 
 // Define the PORT
 const PORT = 5000;
@@ -30,21 +31,13 @@ app.use(
   })
 );
 
-app.use(
-  session({
-    secret: "secret",
-    cookie: { maxAge: 12 * 60 * 60 * 60 * 1000 },
-    saveUninitialized: false,
-    resave: true,
-  })
-);
-
 app.use(cookieParser());
 
 // connecting to the mongoDB
 mongoose.connect("mongodb://localhost:27017/SkaraDB", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  useCreateIndex: true,
 });
 
 const db = mongoose.connection;
@@ -52,6 +45,23 @@ db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", function () {
   console.log("Database connected");
 });
+
+const sessionStore = new MongoStore({
+  mongoUrl: "mongodb://localhost:27017/SkaraDB",
+  mongooseConnection: mongoose.connection,
+  collection: "sessions",
+  ttl: 24 * 60 * 60 * 1000,
+});
+
+app.use(
+  session({
+    secret: "secret",
+    store: sessionStore,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 },
+    saveUninitialized: false,
+    resave: true,
+  })
+);
 
 // Requiring the models
 const classroom = require("./models/classroomModel.js");
@@ -392,7 +402,7 @@ app.get("/studentdashboard", function (req, res) {
 // get the values associated with the classroom
 app.get("/classroom", function (req, res) {
   const cookie = req.session.value;
-  console.log(cookie);
+  console.log(req.session);
   // const claims = jwt.verify(cookie, "secret");
   // if (!claims) {
   //   res.status(404).json({ message: "Unauthorized" });
