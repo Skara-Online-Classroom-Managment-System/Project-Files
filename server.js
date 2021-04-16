@@ -45,8 +45,6 @@ app.use(cookieParser());
 mongoose.connect("mongodb://localhost:27017/SkaraDB", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useFindAndModify: false,
-  useCreateIndex: true,
 });
 
 const db = mongoose.connection;
@@ -61,12 +59,14 @@ const student = require("./models/studentModel.js");
 const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
 
+// a post route to the logout functionality
 app.get("/logout", function (req, res) {
   req.session.value = "NA";
   req.session.destroy();
   console.log("cookie deleted");
 });
 
+// a user route to render the nav bar
 app.get("/user", async (req, res) => {
   const cookie = req.session.value;
   const claims = jwt.verify(cookie, "secret");
@@ -77,6 +77,14 @@ app.get("/user", async (req, res) => {
         console.log(err);
       } else {
         res.status(200).json(currentStudent);
+      }
+    });
+  } else if (claims.type === 2) {
+    teacher.findOne({ _id: claims._id }, function (err, currentTeacher) {
+      if (err) {
+        console.log(err);
+      } else {
+        res.status(200).json(currentTeacher);
       }
     });
   }
@@ -211,7 +219,6 @@ app.post("/studentlogin", function (req, res) {
                   "secret"
                 );
                 req.session.value = token;
-                console.log(req.session.value);
                 res.status(200).json({ username: enteredDetails.username });
               } else {
                 console.log("Enter correct password");
@@ -384,22 +391,40 @@ app.get("/studentdashboard", function (req, res) {
 
 // get the values associated with the classroom
 app.get("/classroom", function (req, res) {
-  var q = classroom
-    .findOne({ classCode: req.query.code })
-    .populate("teachers")
-    .populate("studentsEnrolled")
-    .populate({
-      path: "announcements",
-      populate: { path: "author" },
-    })
-    .populate("teamsAssociated")
-    .exec(function (err, currentClassroom) {
-      if (err) {
-        res.send(err);
-      } else {
-        res.status(200).json(currentClassroom);
-      }
-    });
+  const cookie = req.session.value;
+  console.log(cookie);
+  // const claims = jwt.verify(cookie, "secret");
+  // if (!claims) {
+  //   res.status(404).json({ message: "Unauthorized" });
+  // }
+  // var q = student
+  //   .findOne({ _id: claims._id })
+  //   .populate("classesEnrolled")
+  //   .exec(function (err, currentStudent) {
+  //     if (err) {
+  //       res.send(err);
+  //     } else {
+  //       var { _id, password, ...details } = currentStudent._doc;
+  //       console.log(details);
+  //       res.status(200).json(details);
+  //     }
+  //   });
+  // var q = classroom
+  //   .findOne({ classCode: req.query.code })
+  //   .populate("teachers")
+  //   .populate("studentsEnrolled")
+  //   .populate({
+  //     path: "announcements",
+  //     populate: { path: "author" },
+  //   })
+  //   .populate("teamsAssociated")
+  //   .exec(function (err, currentClassroom) {
+  //     if (err) {
+  //       res.send(err);
+  //     } else {
+  //       res.status(200).json(currentClassroom);
+  //     }
+  //   });
 });
 
 // Listening to the port PORT.

@@ -11,21 +11,20 @@ export default function Classroom() {
   const [classData, setClassData] = React.useState({});
   const { pos } = useParams();
 
-  // React.useEffect(() => {
-  //   console.log("UseEffect called inside the Classroom", selectedOption);
-  //   axios({
-  //     method: "GET",
-  //     withCredentials: true,
-  //     url: "http://localhost:5000/classroom",
-  //     params: {
-  //       sid: sid,
-  //       code: code
-  //     }
-  //   }).then((res) => {
-  //       const loadedData = res.data;
-  //       setClassData(loadedData);
-  //   })
-  // },[selectedOption]);
+  React.useEffect(() => {
+    console.log("UseEffect called inside the Classroom", selectedOption);
+    axios({
+      method: "GET",
+      withCredentials: true,
+      url: "http://localhost:5000/classroom",
+      params: {
+        position: pos,
+      },
+    }).then((res) => {
+      // const loadedData = res.data;
+      // setClassData(loadedData);
+    });
+  }, [selectedOption]);
 
   function handleClick(event) {
     const name = event.target.name;
