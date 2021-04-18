@@ -1,13 +1,12 @@
 import React from "react";
-import axios from "axios";
 import { Redirect } from "react-router-dom";
 
 export default function Register() {
   const [details, setDetails] = React.useState({
-    fn: "",
-    ln: "",
+    firstName: "",
+    lastName: "",
     username: "",
-    pw: "",
+    password: "",
     cpw: "",
   });
   const [redirect, setRedirect] = React.useState(false);
@@ -48,20 +47,20 @@ export default function Register() {
       <h2>Sign Up as a Student</h2>
       <form>
         <div>
-          <label for="fn">First Name: </label>
+          <label for="firstName">First Name: </label>
           <input
             type="text"
-            name="fn"
-            value={details.fn}
+            name="firstName"
+            value={details.firstName}
             onChange={handleChange}
           />
         </div>
         <div>
-          <label for="ln">Last Name: </label>
+          <label for="lastName">Last Name: </label>
           <input
             type="text"
-            name="ln"
-            value={details.ln}
+            name="lastName"
+            value={details.lastName}
             onChange={handleChange}
           />
         </div>
@@ -75,11 +74,11 @@ export default function Register() {
           />
         </div>
         <div>
-          <label for="pw">Password: </label>
+          <label for="password">Password: </label>
           <input
             type="password"
-            name="pw"
-            value={details.pw}
+            name="password"
+            value={details.password}
             onChange={handleChange}
           />
         </div>
@@ -88,7 +87,7 @@ export default function Register() {
           <input
             type="password"
             name="cpw"
-            value={details.pw}
+            value={details.password}
             onChange={handleChange}
           />
         </div>
@@ -97,10 +96,10 @@ export default function Register() {
             event.preventDefault();
             handleSubmit();
             setDetails({
-              fn: "",
-              ln: "",
+              firstName: "",
+              lastName: "",
               username: "",
-              pw: "",
+              password: "",
             });
           }}
         >

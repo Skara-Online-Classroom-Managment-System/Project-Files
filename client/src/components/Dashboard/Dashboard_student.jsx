@@ -4,6 +4,7 @@ import axios from "axios";
 import HomeNav from "../Home/HomeNav.jsx";
 import Classcard from "../Classcard/Classcard_Student.jsx";
 import AddClass from "../Classroom/AddClass.jsx";
+import Sidebar from "../Sidebar/sidebar_student.jsx";
 
 export default function Dashboard() {
   const [studentData, setstudentData] = React.useState({ classesEnrolled: [] });

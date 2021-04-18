@@ -1,55 +1,58 @@
-import React from 'react';
-import axios from 'axios';
-import {useHistory,useParams} from 'react-router-dom';
+import React from "react";
+import axios from "axios";
+import { useHistory } from "react-router-dom";
 
-function CreateClassroom(){
-  const {username}=useParams();
-  const [details,setDetails]=React.useState(
-    {
-      className:String,
-    }
-  )
-  const history=useHistory();
-  
-  function handleSubmit(){
+function CreateClassroom() {
+  const [details, setDetails] = React.useState({
+    className: String,
+  });
+  const history = useHistory();
+
+  function handleSubmit() {
     axios({
-      method:"POST",
-      data:{
-        className:details.className
+      method: "POST",
+      data: {
+        className: details.className,
       },
-      withCredentials:true,
-      url:"http://localhost:5000/createClassroom/"+username
-    }).then((res)=>{
-    console.log("hello")
+      withCredentials: true,
+      url: "http://localhost:5000/createClassroom",
+    }).then((res) => {
+      console.log("hello");
     });
-    history.push("/dashboard/"+username);
+    history.push("/teacherdashboard");
   }
-  
-  
-  function handleChange(event){
-    const value=event.target.value;
+
+  function handleChange(event) {
+    const value = event.target.value;
     setDetails({
-        className:value 
-    })
+      className: value,
+    });
   }
-  
-  return(
+
+  return (
     <div>
-        <form>
-          <label htmlFor='name'>Classroom Name:</label>
-          <input type="text" name="className" value={details.className} onChange={handleChange}/>
-          <button
-          onClick={(event)=>{
+      <form>
+        <label htmlFor="name">Classroom Name:</label>
+        <input
+          type="text"
+          name="className"
+          value={details.className}
+          onChange={handleChange}
+        />
+        <button
+          onClick={(event) => {
             event.preventDefault();
             handleSubmit();
             setDetails({
-              className:""
+              className: "",
             });
-          }
-          }>Submit</button>
-        </form>
+          }}
+        >
+          Submit
+        </button>
+      </form>
     </div>
-    )
+  );
 }
 
 export default CreateClassroom;

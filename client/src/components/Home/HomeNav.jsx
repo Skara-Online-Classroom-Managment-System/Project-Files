@@ -1,37 +1,29 @@
 import React from "react";
-import { Redirect } from "react-router-dom";
 import { Navbar, Nav, NavDropdown } from "react-bootstrap";
 import axios from "axios";
 
 export default function HomeNav(props) {
   const [userData, setUserData] = React.useState({});
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-  const [logOut, setLogOut] = React.useState(false);
   React.useEffect(() => {
     axios({
       method: "GET",
       withCredentials: true,
       url: "http://localhost:5000/user",
     }).then((res) => {
-      // if (res.status !== 200) {
       const loadedData = res.data;
       setUserData(loadedData);
-      console.log(loadedData);
+      console.log(loadedData, "user");
       setIsLoggedIn(true);
-      // }
     });
   }, [userData.length]);
 
   async function handleLogOut() {
-    const response = await fetch("http://localhost:5000/logout", {
+    await fetch("http://localhost:5000/logout", {
       method: "GET",
       credentials: "include",
     });
-    const content = await response.json();
-    setLogOut(true);
-    console.log(logOut);
   }
-
   return (
     <Navbar bg="light" expand="lg">
       <Navbar.Brand href="#home">Skara Classroom Manager</Navbar.Brand>
@@ -64,7 +56,9 @@ export default function HomeNav(props) {
           )}
           {isLoggedIn ? <Nav.Link>Hi {userData.firstName}</Nav.Link> : null}
           {isLoggedIn ? (
-            <Nav.Link onClick={handleLogOut}>Log Out</Nav.Link>
+            <Nav.Link href="/" onClick={handleLogOut}>
+              Log Out
+            </Nav.Link>
           ) : null}
         </Nav>
       </Navbar.Collapse>

@@ -1,50 +1,43 @@
-import React from 'react';
-import {Link,useParams,useHistory} from 'react-router-dom';
-import axios from 'axios';
+import React from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
 import Classcard from "../Classcard/Classcard";
-function Dashboard(){
-const [classesData,setClassesData]=React.useState({
-  "classesEnrolled":[]
-});
+import HomeNav from "../Home/HomeNav";
+import SideBar from "../Sidebar/sidebar_teacher.jsx";
 
-const {username}=useParams();
-const history=useHistory();
+function Dashboard() {
+  const [classesData, setClassesData] = React.useState({
+    classesEnrolled: [],
+  });
   React.useEffect(() => {
-  axios({
-    method: 'GET',
-    url: 'http://localhost:5000/dashboard/'+username    // responseType: 'stream'
-  })
-    .then((res)=> {
-      console.log(res,"dashboard");
-      // if(res.data.classesEnrolled.classesEnrolled.length!==classesData.classesEnrolled.length)
-      // {
-      // setClassesData(res.data.classesEnrolled);
-      // }
-      // console.log(res.data.classesEnrolled);
-    });
-  },[classesData,username]);
-
-  function handleClick(){
     axios({
-      method: 'GET',
-      url: 'http://localhost:5000/logout'    // responseType: 'stream'
-    }).then((res)=>{
-      history.push("/");
-    })
-  }
-    
-  const url="/createClassroom/"+username;
-    return(<div>
+      method: "GET",
+      withCredentials: true,
+      url: "http://localhost:5000/teacherdashboard",
+    }).then((res) => {
+      setClassesData(res.data);
+    });
+  }, [classesData.length]);
+
+  const url = "/createClassroom";
+  return (
+    <div>
+      <HomeNav />
+      <SideBar />
       <Link to={url}>
         <li>Create Classroom</li>
       </Link>
-      <button onClick={handleClick}>LogOut</button>
-     
-      {classesData.classesEnrolled.map((classroom,index)=>(
-            <Classcard key={index} id={classroom.classCode} name={classroom.className}/>
-        ))}
-      </div>
-    )
+
+      {classesData.classesEnrolled.map((classroom, index) => (
+        <Classcard
+          key={index}
+          id={classroom._id}
+          code={classroom.classCode}
+          name={classroom.className}
+        />
+      ))}
+    </div>
+  );
 }
 
 export default Dashboard;

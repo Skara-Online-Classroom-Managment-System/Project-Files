@@ -27,19 +27,19 @@ function App() {
         <Route exact path="/teacherlogin" component={TeacherLogin} />
         <Route exact path="/teachersignup" component={TeacherSignup} />
         <Route exact path="/studentdashboard/" component={DashboardStudent} />
-        <Route exact path="/classroom/:pos" component={ClassroomStudent} />
-        <Route exact path="/teacherdashboard" component={DashboardTeacher} />
         <Route
           exact
-          path="/createClassroom/:username"
-          component={createClassroom}
+          path="/studentclassroom/:studentclassname"
+          component={ClassroomStudent}
         />
+        <Route exact path="/teacherdashboard" component={DashboardTeacher} />
+        <Route exact path="/createClassroom" component={createClassroom} />
         <Route
           exact
-          path="/createAnnouncement/:username/:id"
+          path="/createAnnouncement/:name"
           component={createAnnouncement}
         />
-        <Route exact path="/classroom/:username/:id" component={ClassPane} />
+        <Route exact path="/classroom/:name" component={ClassPane} />
         <Route exact path="/teams/:username/:id" component={TeamPane} />
       </BrowserRouter>
     </div>

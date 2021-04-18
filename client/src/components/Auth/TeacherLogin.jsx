@@ -1,13 +1,12 @@
-
 import React from "react";
-import {Redirect} from 'react-router-dom';
+import { Redirect } from "react-router-dom";
 
 export default function TeacherLogin() {
   const [details, setDetails] = React.useState({
     username: String,
     password: String,
   });
-const[redirect,setRedirect]=React.useState(false);
+  const [redirect, setRedirect] = React.useState(false);
   async function handleSubmit() {
     const response = await fetch("http://localhost:5000/teacherlogin", {
       method: "POST",

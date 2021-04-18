@@ -1,18 +1,14 @@
-// import axios from 'axios';
-import React from 'react';
-import {Link,useParams} from 'react-router-dom';
-function Classcard(props){
+import React from "react";
+import { Link } from "react-router-dom";
+function Classcard(props) {
+  const url = "/classroom/" + props.name;
 
-    const{username}=useParams();
-    const url="/classroom/"+username+"/"+props.id;
-    return(
+  return (
     <div>
-        <Link to={url}>
-        <li>{props.name}</li>
-        </Link> 
-        <li>{props.id}</li>
+      <Link to={url}>{props.name}</Link>
+      <li>{props.code}</li>
     </div>
-)
+  );
 }
 
 export default Classcard;

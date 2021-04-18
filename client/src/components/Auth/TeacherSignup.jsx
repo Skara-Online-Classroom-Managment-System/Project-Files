@@ -1,10 +1,9 @@
 import React from "react";
-// import axios from "axios";
 import { Redirect } from "react-router-dom";
 
 function TeacherRegister() {
   const [details, setDetails] = React.useState({
-    fn: "",
+    firstName: "",
     username: "",
     pw: "",
     classesEnrolled: [],
@@ -29,7 +28,7 @@ function TeacherRegister() {
   }
 
   if (redirect) {
-    return <Redirect to={"/teacherdashboard"} />;
+    return <Redirect to={"/teacherlogin"} />;
   }
 
   function handleChange(event) {
@@ -47,11 +46,11 @@ function TeacherRegister() {
   return (
     <div>
       <form>
-        <label htmlFor="fn">Name:</label>
+        <label htmlFor="firstName">Name:</label>
         <input
           type="text"
-          name="fn"
-          value={details.fn}
+          name="firstName"
+          value={details.firstName}
           onChange={handleChange}
         />
         <label htmlFor="email">Email:</label>
@@ -73,7 +72,7 @@ function TeacherRegister() {
             event.preventDefault();
             handleSubmit();
             setDetails({
-              fn: "",
+              firstName: "",
               username: "",
               pw: "",
               classesEnrolled: [],
