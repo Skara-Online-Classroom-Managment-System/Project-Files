@@ -5,5 +5,11 @@ export default function Stream(props) {
   {
     console.log(props.data);
   }
-  return <div>Hi this is the stream.</div>;
+  let toshow = null;
+  if (props.data.announcements) {
+    toshow = props.data.announcements.map((a, index) => {
+      return <Announcement data={a} key={index} />;
+    });
+  }
+  return <div>{toshow}</div>;
 }

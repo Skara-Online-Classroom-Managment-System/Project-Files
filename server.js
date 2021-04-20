@@ -188,23 +188,20 @@ app.post("/studentsignup", function (req, res) {
         if (req.body.password === "") {
           res.status(201).json({ Message: "Enter a valid password." });
         }
-        await bcrypt.hash(
-          req.body.pw,
-          10,
-          async function (err, hashedPassword) {
-            if (err) {
-              console.log(err);
-            }
-            const newStudent = new student({
-              username: req.body.username,
-              password: hashedPassword,
-              firstName: req.body.fn,
-              lastName: req.body.ln,
-              classesEnrolled: [],
-            });
-            await newStudent.save();
+        bcrypt.hash(req.body.password, 10, function (err, hashedPassword) {
+          if (err) {
+            console.log(err);
           }
-        );
+          const newStudent = new student({
+            username: req.body.username,
+            password: hashedPassword,
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            classesEnrolled: [],
+          });
+          newStudent.save();
+          console.log(newStudent);
+        });
         res.status(200).json({ username: req.body.username });
       }
     }

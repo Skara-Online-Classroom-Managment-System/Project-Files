@@ -65,11 +65,6 @@ function ClassPane(props) {
       {selectedOption === 2 ? <People data={classData} /> : null}
       {selectedOption === 3 ? <Teams data={classData} /> : null}
     </div>
-
-    //       {/* {classData.announcements.map((obj,index)=>{
-    //          return(
-    // <Announcement author={obj.author} text={obj.text} time={obj.time} key={index} />
-    //         )})} */}
   );
 }
 export default ClassPane;

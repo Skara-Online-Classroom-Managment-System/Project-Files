@@ -14,7 +14,6 @@ import ClassroomStudent from "./Classroom/Classroom_student.jsx";
 import createClassroom from "./Classroom/createClassroom";
 import createAnnouncement from "./Announcements/CreateAnnouncement";
 import ClassPane from "./Classroom/ClassPane";
-import TeamPane from "./Team/TeamPane";
 
 // Defining the App component
 function App() {
@@ -40,7 +39,6 @@ function App() {
           component={createAnnouncement}
         />
         <Route exact path="/classroom/:name" component={ClassPane} />
-        <Route exact path="/teams/:username/:id" component={TeamPane} />
       </BrowserRouter>
     </div>
   );
