@@ -1,7 +1,6 @@
 {
-  "name": "Skara-Full",
+  "name": "skara-full",
   "version": "1.0.0",
-  "description": "",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -34,9 +33,12 @@
     "passport-local": "^1.0.0",
     "passport-local-mongoose": "^6.1.0",
     "react-bootstrap": "^1.5.2",
+    "react-icons": "^4.2.0",
     "react-router-dom": "^5.2.0",
     "react-sidebar": "^3.0.2",
+    "react-textarea-autosize": "^8.3.2",
     "react-transition-group": "^4.4.1",
     "redis": "^3.1.1"
-  }
+  },
+  "description": ""
 }

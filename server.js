@@ -69,6 +69,19 @@ const student = require("./models/studentModel.js");
 const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
 
+// const data2=new team({
+//   teamName:"snorlax",
+//   classAssosiated:"607d62893c4d5c3e58b112b0",
+//   members:[],
+//   teamChat:[],
+//   teacherChat:[]
+// })
+// data2.save(err=>{
+//   if(!err){
+//     console.log("succeedd");
+//   }
+// })
+
 // a post route to the logout functionality
 app.get("/logout", function (req, res) {
   req.session.value = "NA";
@@ -189,7 +202,7 @@ app.post("/studentsignup", function (req, res) {
           res.status(201).json({ Message: "Enter a valid password." });
         }
         await bcrypt.hash(
-          req.body.pw,
+          req.body.password,
           10,
           async function (err, hashedPassword) {
             if (err) {
@@ -198,8 +211,8 @@ app.post("/studentsignup", function (req, res) {
             const newStudent = new student({
               username: req.body.username,
               password: hashedPassword,
-              firstName: req.body.fn,
-              lastName: req.body.ln,
+              firstName: req.body.firstName,
+              lastName: req.body.lastName,
               classesEnrolled: [],
             });
             await newStudent.save();
@@ -276,7 +289,7 @@ app.post("/createclassroom", function (req, res) {
           classCode: makeid(6),
           teachers: [],
           announcements: [],
-          teams: [],
+          teams: ["607d64ffcddbd22ab8ea6770"],
         });
         data.teachers.push(foundTeacher._id);
         data.save(function (err, result) {
@@ -285,7 +298,7 @@ app.post("/createclassroom", function (req, res) {
             foundTeacher.classesEnrolled.push(result._id);
             foundTeacher.save(function (err) {
               if (!err) {
-                console.log("teacher updated");
+                res.status(200).json({msg:"teacher updated"});
               }
             });
           } else {
@@ -300,7 +313,7 @@ app.post("/createclassroom", function (req, res) {
 });
 
 // stores announcement inside classroom model
-app.post("/createAnnouncement/:name/", function (req, res) {
+app.post("/createAnnouncement/:name", function (req, res) {
   try {
     const event = new Date();
     const cookie = req.session.value;
@@ -324,7 +337,7 @@ app.post("/createAnnouncement/:name/", function (req, res) {
                 if (!err) {
                   res
                     .status(200)
-                    .json({ msg: "Succesfully added announcement" });
+                    .json({ "class":foundClass });
                 }
               });
             }
@@ -402,11 +415,11 @@ app.get("/teacherdashboard", function (req, res) {
           console.log(err);
         } else {
           var { _id, pw, ...details } = foundTeacher._doc;
-          res.status(200).json(details);
+          return res.status(200).json(details);
         }
       });
   } catch (e) {
-    return res.status(404).json({ message: "Unauthorized" });
+    return res.status(404).json({ message: e });
   }
 });
 
@@ -461,7 +474,9 @@ app.get("/studentclassroom/:name", function (req, res) {
 });
 // get the values associated with the teacher classroom
 app.post("/classroom/:name", function (req, res) {
+  console.log("hello of classroom:name")
   try {
+    console.log("hello classroom")
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
     if (!claims) {
@@ -524,34 +539,13 @@ app.get("/stream", function (req, res) {
     });
 });
 
-app.get("/people", function (req, res) {
-  const cookie = req.session.value;
-  console.log(req.session);
-  const claims = jwt.verify(cookie, "secret");
-  if (!claims) {
-    res.status(404).json({ message: "Unauthorized" });
-  }
-  var q = student
-    .findOne({ _id: claims._id })
-    .populate("classesEnrolled")
-    .exec(function (err, currentStudent) {
-      if (err) {
-        res.send(err);
-      } else {
-        var { _id, password, ...details } = currentStudent._doc;
-        console.log(details);
-        res.status(200).json(details);
-      }
-    });
+app.post("/people", function (req, res) {
+
   var q = classroom
-    .findOne({ classCode: req.query.pos })
+    .findOne({ classCode: req.body.classCode })
     .populate("teachers")
     .populate("studentsEnrolled")
-    .populate({
-      path: "announcements",
-      populate: { path: "author" },
-    })
-    .populate("teamsAssociated")
+    .populate("teams")
     .exec(function (err, currentClassroom) {
       if (err) {
         res.send(err);
@@ -561,42 +555,35 @@ app.get("/people", function (req, res) {
     });
 });
 
-app.get("/teams", function (req, res) {
-  const cookie = req.session.value;
-  console.log(req.session);
-  const claims = jwt.verify(cookie, "secret");
-  if (!claims) {
-    res.status(404).json({ message: "Unauthorized" });
-  }
-  var q = student
-    .findOne({ _id: claims._id })
-    .populate("classesEnrolled")
-    .exec(function (err, currentStudent) {
-      if (err) {
-        res.send(err);
-      } else {
-        var { _id, password, ...details } = currentStudent._doc;
-        console.log(details);
-        res.status(200).json(details);
-      }
-    });
+app.post("/teams", function (req, res) {
+  console.log(req.body);
   var q = classroom
-    .findOne({ classCode: req.query.pos })
-    .populate("teachers")
-    .populate("studentsEnrolled")
-    .populate({
-      path: "announcements",
-      populate: { path: "author" },
-    })
-    .populate("teamsAssociated")
-    .exec(function (err, currentClassroom) {
-      if (err) {
-        res.send(err);
-      } else {
-        res.status(200).json(currentClassroom);
-      }
-    });
+  .findOne({ classCode: req.body.classCode })
+  .populate("teachers")
+  .populate("studentsEnrolled")
+  .populate("teams")
+  .exec(function (err, currentClassroom) {
+    if (err) {
+      res.send(err);
+    } else {
+      res.status(200).json(currentClassroom);
+    }
+  });
 });
+
+app.post("/individualTeam",(req,res)=>{
+  console.log(req.body);
+  var q = team
+  .findOne({ _id: req.body._id })
+  .populate("members")
+  .exec(function (err, currentTeam) {
+    if (err) {
+      res.send(err);
+    } else {
+      res.status(200).json(currentTeam);
+    }
+  });
+})
 
 // Listening to the port PORT.
 app.listen(PORT, function () {

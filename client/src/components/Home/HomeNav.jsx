@@ -13,7 +13,6 @@ export default function HomeNav(props) {
     }).then((res) => {
       const loadedData = res.data;
       setUserData(loadedData);
-      console.log(loadedData, "user");
       setIsLoggedIn(true);
     });
   }, [userData.length]);

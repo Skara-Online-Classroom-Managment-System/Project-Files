@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link ,useHistory} from "react-router-dom";
 import axios from "axios";
 import Classcard from "../Classcard/Classcard";
 import HomeNav from "../Home/HomeNav";
@@ -9,6 +9,7 @@ function Dashboard() {
   const [classesData, setClassesData] = React.useState({
     classesEnrolled: [],
   });
+  const history=useHistory();
   React.useEffect(() => {
     axios({
       method: "GET",
@@ -16,8 +17,21 @@ function Dashboard() {
       url: "http://localhost:5000/teacherdashboard",
     }).then((res) => {
       setClassesData(res.data);
+      // history.push("/teacherdashboard");
     });
   }, [classesData.length]);
+
+  let toshow=null;
+  if(classesData.classesEnrolled){
+    toshow=classesData.classesEnrolled.map((classroom, index) => (
+      <Classcard
+        key={index}
+        id={classroom._id}
+        code={classroom.classCode}
+        name={classroom.className}
+      />
+    ))
+  }
 
   const url = "/createClassroom";
   return (
@@ -28,14 +42,7 @@ function Dashboard() {
         <li>Create Classroom</li>
       </Link>
 
-      {classesData.classesEnrolled.map((classroom, index) => (
-        <Classcard
-          key={index}
-          id={classroom._id}
-          code={classroom.classCode}
-          name={classroom.className}
-        />
-      ))}
+      {toshow}
     </div>
   );
 }

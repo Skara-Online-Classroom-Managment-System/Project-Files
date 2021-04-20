@@ -18,8 +18,9 @@ function CreateClassroom() {
       url: "http://localhost:5000/createClassroom",
     }).then((res) => {
       console.log("hello");
-    });
+      
     history.push("/teacherdashboard");
+    });
   }
 
   function handleChange(event) {

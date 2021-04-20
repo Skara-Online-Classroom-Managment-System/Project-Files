@@ -1,6 +1,6 @@
 // Importing the basic React Model
 import React from "react";
-import { BrowserRouter, Route, Redirect } from "react-router-dom";
+import { BrowserRouter, Route,Switch } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import Home from "./Home/Home.jsx";
@@ -12,15 +12,19 @@ import DashboardStudent from "./Dashboard/Dashboard_student.jsx";
 import DashboardTeacher from "./Dashboard/Dashboard_teacher.jsx";
 import ClassroomStudent from "./Classroom/Classroom_student.jsx";
 import createClassroom from "./Classroom/createClassroom";
-import createAnnouncement from "./Announcements/CreateAnnouncement";
 import ClassPane from "./Classroom/ClassPane";
-import TeamPane from "./Team/TeamPane";
+// import Stream from "./Classroom/Stream.jsx";
+// import People from "./Classroom/People.jsx";
+// import ViewTeam from "./Team/ViewTeams.jsx";
+
+// import IndividualTeam from "./Team/IndividualTeam.jsx";
 
 // Defining the App component
 function App() {
   return (
     <div>
       <BrowserRouter>
+      <Switch>
         <Route exact path="/" component={Home} />
         <Route exact path="/studentlogin" component={StudentLogin} />
         <Route exact path="/studentsignup" component={StudentSignup} />
@@ -34,13 +38,11 @@ function App() {
         />
         <Route exact path="/teacherdashboard" component={DashboardTeacher} />
         <Route exact path="/createClassroom" component={createClassroom} />
-        <Route
-          exact
-          path="/createAnnouncement/:name"
-          component={createAnnouncement}
-        />
         <Route exact path="/classroom/:name" component={ClassPane} />
-        <Route exact path="/teams/:username/:id" component={TeamPane} />
+        {/* <Route exact path="/classroom/stream" component={Stream} />
+        <Route exact path="/classroom/people" component={People} />
+        <Route exact path="/classroom/team" component={ViewTeam} /> */}
+        </Switch>
       </BrowserRouter>
     </div>
   );
