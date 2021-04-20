@@ -10,7 +10,7 @@ export default function Register() {
     cpw: "",
   });
   const [redirect, setRedirect] = React.useState(false);
-
+  
   async function handleSubmit() {
     const response = await fetch("http://localhost:5000/studentsignup", {
       method: "POST",

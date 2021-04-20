@@ -5,7 +5,8 @@ import TeacherChat from "../Chat/TeacherChat.jsx";
 import TeamChat from "../Chat/TeamChat.jsx";
 
 export default function Teams(props) {
-  const [data, selectedData] = React.useState(props.data);
+  const data = props.data;
+  // const [data, selectedData] = React.useState(props.data);
   const [selectedOption, setSelectedOption] = React.useState(1);
 
   console.log(props.data);
@@ -24,45 +25,19 @@ export default function Teams(props) {
 
   return (
     <div>
-      <ul className="nav justify-content-center">
-        <li className="nav-item">
-          <button
-            type="button"
-            className="btn btn-outline-dark btn-sm"
-            onClick={handleClick}
-            data={data}
-            name="viewTeams"
-          >
-            View Teams
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            type="button"
-            className="btn btn-outline-dark btn-sm"
-            onClick={handleClick}
-            data={data}
-            name="teacherChat"
-          >
-            Teacher Chat
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            type="button"
-            className="btn btn-outline-dark btn-sm"
-            onClick={handleClick}
-            data={data}
-            name="teamChat"
-          >
-            Team Chat
-          </button>
-        </li>
-      </ul>
+      <button onClick={handleClick} name="viewTeams">
+        View Teams
+      </button>
+      <button onClick={handleClick} name="teacherChat">
+        Teacher Chat
+      </button>
+      <button onClick={handleClick} name="teamChat">
+        Team Chat
+      </button>
+      {selectedOption === 1 ? <ViewTeams data={data} /> : null}
+      {selectedOption === 2 ? <TeacherChat data={data} /> : null}
+      {selectedOption === 3 ? <TeamChat data={data} /> : null}
       {/* <SubmitPortal /> */}
-      {selectedOption === 1 ? <ViewTeams data={props.data} /> : null}
-      {selectedOption === 2 ? <TeacherChat /> : null}
-      {selectedOption === 3 ? <TeamChat /> : null}
     </div>
   );
 }
