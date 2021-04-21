@@ -316,36 +316,35 @@ app.post("/createclassroom", function (req, res) {
 });
 
 // stores announcement inside classroom model
-app.post("/createAnnouncement/:name", function (req, res) {
+app.post("/createAnnouncement/:pos", function (req, res) {
   try {
     const event = new Date();
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
-    classroom.findOne(
-      { className: req.params.name },
-      function (err, foundClass) {
+    console.log(claims);
+    teacher
+      .findOne({ _id: claims._id })
+      .populate("classesEnrolled")
+      .exec(async function (err, foundTeacher) {
         if (err) {
           console.log(err);
         } else {
-          teacher.findOne(
-            { _id: foundClass.teachers[0] },
-            async function (err, foundTeacher) {
-              const data = {
-                author: foundTeacher.firstName,
-                text: req.body.announcement,
-                time: event.toLocaleDateString("en-US"),
-              };
-              foundClass.announcements.push(data);
-              await foundClass.save(function (err) {
-                if (!err) {
-                  res.status(200).json({ class: foundClass });
-                }
-              });
+          console.log(req.params.pos);
+          const foundClass = foundTeacher.classesEnrolled[req.params.pos];
+          console.log(foundClass);
+          const data = {
+            author: claims._id,
+            text: req.body.announcement,
+            time: event.toLocaleDateString("en-US"),
+          };
+          foundClass.announcements.push(data);
+          await foundClass.save(function (err) {
+            if (!err) {
+              res.status(200).json({ class: foundClass });
             }
-          );
+          });
         }
-      }
-    );
+      });
   } catch (err) {
     console.log(err);
   }
