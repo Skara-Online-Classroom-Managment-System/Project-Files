@@ -12,7 +12,7 @@ function Sidebar() {
   const [sidebar, setSidebar] = useState(false);
 
   const showSidebar = () => setSidebar(!sidebar);
-  const [classData, setclassData] = useState({
+  const [classData, setclassData] = React.useState({
     classesEnrolled: [],
   });
 

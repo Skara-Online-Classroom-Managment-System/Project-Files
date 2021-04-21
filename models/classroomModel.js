@@ -14,7 +14,10 @@ const classSchema = new mongoose.Schema({
   ],
   announcements: [
     {
-      author: String,
+      author: {
+        type: mongoose.Schema.Types.ObjectID,
+        ref: "teacher",
+      },
       text: String,
       time: String,
     },

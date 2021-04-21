@@ -133,13 +133,14 @@ app.post("/teachersignup", async function (req, res) {
         if (req.body.password === "") {
           res.status(201).json({ Message: "Enter a valid password." });
         }
-        const hashedPassword = await bcrypt.hash(req.body.pw, 10);
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
         const newTeacher = new teacher({
           firstName: req.body.firstName,
           classesEnrolled: [],
           invitesPending: [],
           username: req.body.username,
-          pw: hashedPassword,
+          password: hashedPassword,
+          lastName: req.body.lastName,
         });
         await newTeacher.save();
         res.status(200).json({ username: req.body.username });
@@ -152,7 +153,7 @@ app.post("/teachersignup", async function (req, res) {
 app.post("/teacherlogin", function (req, res, next) {
   const enteredDetails = {
     username: req.body.username,
-    pw: req.body.password,
+    password: req.body.password,
   };
   teacher.findOne(
     { username: enteredDetails.username },
@@ -162,8 +163,8 @@ app.post("/teacherlogin", function (req, res, next) {
       } else {
         if (foundUser) {
           await bcrypt.compare(
-            enteredDetails.pw,
-            foundUser.pw,
+            enteredDetails.password,
+            foundUser.password,
             function (err, result) {
               if (result === true) {
                 console.log("user found");
@@ -248,9 +249,11 @@ app.post("/studentlogin", function (req, res) {
                   "secret"
                 );
                 req.session.value = token;
-                res.status(200).json({ username: enteredDetails.username });
+                return res
+                  .status(200)
+                  .json({ username: enteredDetails.username });
               } else {
-                console.log("Enter correct password");
+                return res.status(201).json({ msg: "Enter correct password" });
               }
             }
           );
@@ -357,7 +360,6 @@ app.post("/addclass", function (req, res) {
   const classCode = req.body.classCode;
   var query = student
     .findOne({ _id: claims._id })
-    .populate("classesEnrolled")
     .exec(function (err, currentStudent) {
       if (err) {
         console.log(err);
@@ -397,108 +399,168 @@ app.post("/addclass", function (req, res) {
     });
 });
 
-app.get("/teacherdashboard", function (req, res) {
+app.get("/dashboard", function (req, res) {
   try {
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
     if (!claims) {
       res.status(404).json({ message: "Unauthorized" });
     }
-    console.log(claims);
-    var q = teacher
-      .findOne({ _id: claims._id })
-      .populate("classesEnrolled")
-      .exec(function (err, foundTeacher) {
-        if (err) {
-          console.log(err);
-        } else {
-          var { _id, pw, ...details } = foundTeacher._doc;
-          return res.status(200).json(details);
-        }
-      });
+    if (claims.type === 2) {
+      var q = teacher
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .exec(function (err, foundTeacher) {
+          if (err) {
+            console.log(err);
+          } else {
+            var { _id, password, ...details } = foundTeacher._doc;
+            return res
+              .status(200)
+              .json({ details: details, type: claims.type });
+          }
+        });
+    }
+    if (claims.type === 1) {
+      var q = student
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .populate({
+          path: "classesEnrolled",
+          populate: { path: "teachers" },
+        })
+        .exec(function (err, currentStudent) {
+          if (err) {
+            res.send(err);
+          } else {
+            var { _id, password, ...details } = currentStudent._doc;
+            res.status(200).json({ details: details, type: claims.type });
+          }
+        });
+    }
   } catch (e) {
+    console.log(e);
     return res.status(404).json({ message: e });
   }
 });
 
-// get request from the server based on the parameters to display dashboard
-app.get("/studentdashboard", function (req, res) {
+app.get("/classroom", function (req, res) {
+  const pos = req.query.pos;
   try {
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
     if (!claims) {
       res.status(404).json({ message: "Unauthorized" });
     }
-    var q = student
-      .findOne({ _id: claims._id })
-      .populate("classesEnrolled")
-      .exec(function (err, currentStudent) {
-        if (err) {
-          res.send(err);
-        } else {
-          var { _id, password, ...details } = currentStudent._doc;
-          res.status(200).json(details);
-        }
-      });
-  } catch (e) {
-    return res.status(404).json({ message: "Unauthorized" });
-  }
-});
-
-app.get("/studentclassroom/:name", function (req, res) {
-  try {
-    const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
-    if (!claims) {
-      res.status(404).json({ message: "Unauthorized" });
+    if (claims.type === 2) {
+      var q = teacher
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .populate("announcements")
+        .populate({
+          path: "announcements",
+          populate: { path: "author" },
+        })
+        .exec(function (err, currentStudent) {
+          if (err) {
+            res.send(err);
+          } else {
+            const currentID = currentStudent.classesEnrolled[pos]._id;
+            const query = classroom
+              .findOne({ _id: currentID })
+              .populate("announcements")
+              .populate("classesEnrolled")
+              .populate("announcements")
+              .populate({
+                path: "announcements",
+                populate: { path: "author" },
+              })
+              .populate("teachers")
+              .populate("studentsEnrolled")
+              .exec(function (err, currentClass) {
+                if (err) {
+                  console.log(err);
+                } else {
+                  res.status(200).json({
+                    classData: currentClass,
+                    type: 2,
+                  });
+                }
+              });
+          }
+        });
     }
-    var q = student
-      .findOne({ _id: claims._id })
-      .populate("classesEnrolled")
-      .exec(function (err, currentStudent) {
-        if (err) {
-          res.send(err);
-        } else {
-          currentStudent.classesEnrolled.map((currentClass, index) => {
-            if (currentClass.className === req.params.name) {
-              res.status(200).json(currentClass);
-            }
-          });
-        }
-      });
+    if (claims.type === 1) {
+      var q = student
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .populate("announcements")
+        .populate({
+          path: "announcements",
+          populate: { path: "author" },
+        })
+        .exec(function (err, currentStudent) {
+          if (err) {
+            res.send(err);
+          } else {
+            const currentID = currentStudent.classesEnrolled[pos]._id;
+            const query = classroom
+              .findOne({ _id: currentID })
+              .populate("announcements")
+              .populate("classesEnrolled")
+              .populate("announcements")
+              .populate({
+                path: "announcements",
+                populate: { path: "author" },
+              })
+              .populate("teachers")
+              .populate("studentsEnrolled")
+              .exec(function (err, currentClass) {
+                if (err) {
+                  console.log(err);
+                } else {
+                  res.status(200).json({
+                    classData: currentClass,
+                    type: 1,
+                  });
+                }
+              });
+          }
+        });
+    }
   } catch (err) {
     console.log(err);
   }
 });
 // get the values associated with the teacher classroom
-app.post("/classroom/:name", function (req, res) {
-  console.log("hello of classroom:name");
-  try {
-    console.log("hello classroom");
-    const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
-    if (!claims) {
-      res.status(404).json({ message: "Unauthorized" });
-    }
+// app.post("/classroom/:name", function (req, res) {
+//   console.log("hello of classroom:name");
+//   try {
+//     console.log("hello classroom");
+//     const cookie = req.session.value;
+//     const claims = jwt.verify(cookie, "secret");
+//     if (!claims) {
+//       res.status(404).json({ message: "Unauthorized" });
+//     }
 
-    var q = teacher
-      .findOne({ _id: claims._id })
-      .populate("classesEnrolled")
-      .exec(async function (err, currentTeacher) {
-        if (err) {
-          res.send(err);
-        } else {
-          await currentTeacher.classesEnrolled.map((currentClass, index) => {
-            if (currentClass.className === req.params.name) {
-              return res.status(200).json(currentClass);
-            }
-          });
-        }
-      });
-  } catch (err) {
-    console.log(err);
-  }
-});
+//     var q = teacher
+//       .findOne({ _id: claims._id })
+//       .populate("classesEnrolled")
+//       .exec(async function (err, currentTeacher) {
+//         if (err) {
+//           res.send(err);
+//         } else {
+//           await currentTeacher.classesEnrolled.map((currentClass, index) => {
+//             if (currentClass.className === req.params.name) {
+//               return res.status(200).json(currentClass);
+//             }
+//           });
+//         }
+//       });
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
 
 app.get("/stream", function (req, res) {
   const cookie = req.session.value;

@@ -13,11 +13,6 @@ import DashboardTeacher from "./Dashboard/Dashboard_teacher.jsx";
 import ClassroomStudent from "./Classroom/Classroom_student.jsx";
 import createClassroom from "./Classroom/createClassroom";
 import ClassPane from "./Classroom/ClassPane";
-// import Stream from "./Classroom/Stream.jsx";
-// import People from "./Classroom/People.jsx";
-// import ViewTeam from "./Team/ViewTeams.jsx";
-
-// import IndividualTeam from "./Team/IndividualTeam.jsx";
 
 // Defining the App component
 function App() {
@@ -39,9 +34,6 @@ function App() {
           <Route exact path="/teacherdashboard" component={DashboardTeacher} />
           <Route exact path="/createClassroom" component={createClassroom} />
           <Route exact path="/classroom/:name" component={ClassPane} />
-          {/* <Route exact path="/classroom/stream" component={Stream} />
-        <Route exact path="/classroom/people" component={People} />
-        <Route exact path="/classroom/team" component={ViewTeam} /> */}
         </Switch>
       </BrowserRouter>
     </div>
