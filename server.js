@@ -445,6 +445,7 @@ app.get("/dashboard", function (req, res) {
 
 app.get("/classroom", function (req, res) {
   const pos = req.query.pos;
+  console.log(pos)
   try {
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
@@ -455,11 +456,6 @@ app.get("/classroom", function (req, res) {
       var q = teacher
         .findOne({ _id: claims._id })
         .populate("classesEnrolled")
-        .populate("announcements")
-        .populate({
-          path: "announcements",
-          populate: { path: "author" },
-        })
         .exec(function (err, currentStudent) {
           if (err) {
             res.send(err);
@@ -493,11 +489,6 @@ app.get("/classroom", function (req, res) {
       var q = student
         .findOne({ _id: claims._id })
         .populate("classesEnrolled")
-        .populate("announcements")
-        .populate({
-          path: "announcements",
-          populate: { path: "author" },
-        })
         .exec(function (err, currentStudent) {
           if (err) {
             res.send(err);

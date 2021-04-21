@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 // Defining the schema of teacher.
 const teacherSchema = new mongoose.Schema({
   firstName: String,
-  lastName: String,
+  lastName:String,
   username: String,
   password: String,
   classesEnrolled: [
