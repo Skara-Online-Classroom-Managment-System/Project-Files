@@ -19,7 +19,7 @@ const classSchema = new mongoose.Schema({
       ref: "teacher",
       },
       text: String,
-      time: String,
+      time: Date,
     },
   ],
   studentsEnrolled: [
