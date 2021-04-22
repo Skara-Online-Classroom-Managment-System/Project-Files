@@ -593,6 +593,10 @@ app.get("/teams", async function (req, res) {
           path: "classesEnrolled",
           populate: { path: "teams" },
         })
+        .populate({
+          path: "classesEnrolled",
+          populate: { path: "teams", populate: { path: "members" } },
+        })
         .exec(function (err, currentStudent) {
           currentClass = currentStudent.classesEnrolled[req.query.pos];
           console.log(currentClass, "teams");
@@ -619,6 +623,29 @@ app.get("/teams", async function (req, res) {
                 }
               }
             });
+          }
+        });
+    }
+    if (claims.type === 2) {
+      let currentClass;
+      teacher
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .populate({
+          path: "classesEnrolled",
+          populate: { path: "teams" },
+        })
+        .populate({
+          path: "classesEnrolled",
+          populate: { path: "teams", populate: { path: "members" } },
+        })
+        .exec(function (err, currentTeacher) {
+          currentClass = currentTeacher.classesEnrolled[req.query.pos];
+          if (currentClass.teams) {
+            console.log(currentClass.teams);
+            res
+              .status(200)
+              .json({ teamData: currentClass.teams, type: claims.type });
           }
         });
     }
@@ -804,7 +831,7 @@ app.post("/teacherchat", (req, res) => {
           }
         });
     }
-    if(claims.type===2){
+    if (claims.type === 2) {
       teacher
         .findOne({ _id: claims._id })
         .populate("classesEnrolled")
@@ -844,6 +871,39 @@ app.post("/teacherchat", (req, res) => {
     console.log(err);
   }
 });
+
+app.get("/teamselected",(req,res)=>{
+  try{
+    const cookie = req.session.value;
+    const claims = jwt.verify(cookie, "secret"); 
+    if(!claims){
+      res.status(201).json({msg:"unauthorized"})
+    }
+    if(claims.type===2){
+      teacher.findOne({_id:claims._id})
+      .populate("classesEnrolled")
+      .populate({
+        path: "classesEnrolled",
+        populate: { path: "teams" },
+      })
+      .exec(function(err,foundTeacher){
+        const currentClass=foundTeacher.classesEnrolled[req.query.pos]
+        console.log(currentClass)
+        const currentTeam=currentClass.teams[req.query.teampos]
+        console.log(currentTeam,"currentTeam");
+        team.findOne({_id:currentTeam._id},function(err,foundTeam){
+          if(!err){
+            console.log("teamsent")
+            res.status(200).json({teamDetails:foundTeam});
+          }
+        })
+      })
+    }
+
+  }catch(e){
+    console.log(e);
+  }
+})
 // Listening to the port PORT.
 app.listen(PORT, function () {
   console.log("Server is listening to port ", PORT);
