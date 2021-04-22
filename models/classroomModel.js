@@ -1,6 +1,4 @@
-// requiring the mongoose library
 const mongoose = require("mongoose");
-const passport = require("passport");
 
 // Defining the schema of classroom.
 const classSchema = new mongoose.Schema({
