@@ -649,15 +649,15 @@ app.get("/teams", async function (req, res) {
           populate: { path: "teams", populate: { path: "members" } },
         })
         .exec(function (err, currentTeacher) {
-          currentClass = currentTeacher.classesEnrolled[req.query.pos];
           if (currentTeacher.classesEnrolled[req.query.pos].teams) {
-            console.log(currentTeacher.classesEnrolled[req.query.pos].teams);
+            console.log(currentTeacher.classesEnrolled[req.query.pos].teams,"teams");
             res.status(200).json({
               teamData: currentTeacher.classesEnrolled[req.query.pos].teams,
               type: claims.type,
             });
+          }else{
+            res.status(200).json({msg:"no teams in the class"})
           }
-          res.status(200).json({ teamData: null, type: claims.type });
         });
     }
   } catch (e) {
@@ -919,17 +919,21 @@ app.get("/teamselected", (req, res) => {
           path: "classesEnrolled",
           populate: { path: "teams" },
         })
+        .populate({
+          path: "classesEnrolled",
+          populate: { path: "teams", populate: { path: "members" } },
+        })
         .exec(function (err, foundTeacher) {
           const currentClass = foundTeacher.classesEnrolled[req.query.pos];
           console.log(currentClass);
           const currentTeam = currentClass.teams[req.query.teampos];
           console.log(currentTeam, "currentTeam");
-          team.findOne({ _id: currentTeam._id }, function (err, foundTeam) {
-            if (!err) {
-              console.log("teamsent");
-              res.status(200).json({ teamDetails: foundTeam });
-            }
-          });
+          // team.findOne({ _id: currentTeam._id }, function (err, foundTeam) {
+            // if (!err) {
+              // console.log(foundTeam);
+              res.status(200).json({ teamDetails: currentTeam });
+            // }
+          
         });
     }
   } catch (e) {
