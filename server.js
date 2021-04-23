@@ -562,15 +562,14 @@ app.post("/people", function (req, res) {
     });
 });
 
-app.get("/teams", async function (req, res) {
-  // console.log(req.params.pos)
-  console.log(req.query.pos);
+app.get("/teams", function (req, res) {
   try {
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
     if (!claims) {
       res.status(201).json({ msg: "unauthorized" });
     }
+    console.log("teamClaimstype", claims.type);
     if (claims.type === 1) {
       let currentClass;
       student
@@ -586,16 +585,13 @@ app.get("/teams", async function (req, res) {
         })
         .exec(function (err, currentStudent) {
           currentClass = currentStudent.classesEnrolled[req.query.pos];
-          console.log(currentClass, "teams");
           if (currentClass.teams) {
-            console.log("teams", currentClass.teams);
             currentClass.teams.map((currentTeam, index) => {
-              console.log(currentTeam, "current Team");
               if (currentTeam.members) {
                 var found = false;
-                console.log(currentTeam, "found");
-                currentTeam.members.map((currentMemberId) => {
-                  if (currentMemberId.toString() === claims._id.toString()) {
+                currentTeam.members.map((currentMember) => {
+                  console.log(currentMember._id, " ", claims._id);
+                  if (currentMember._id.toString() === claims._id.toString()) {
                     found = true;
                     console.log("here");
                     return;
@@ -604,11 +600,16 @@ app.get("/teams", async function (req, res) {
                 if (found) {
                   return res
                     .status(200)
-                    .json({ teamData: currentTeam, type: claims.type });
+                    .json({ teamData: currentTeam, type: 1 });
                 } else {
-                  res.status(201).json({ msg: "not member of any team" });
+                  console.log("her2");
+                  return res
+                    .status(201)
+                    .json({ type: 1, msg: "not member of any team" });
                 }
               }
+              console.log(her3);
+              res.status(201).json({ type: 1, msg: "not member of any team" });
             });
           }
         });
