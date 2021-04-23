@@ -69,8 +69,21 @@ const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
 const { createBrotliCompress } = require("zlib");
 
+// const data2=new team({
+//   teamName:"snorlax",
+//   classAssosiated:"607d62893c4d5c3e58b112b0",
+//   members:[],
+//   teamChat:[],
+//   teacherChat:[]
+// })
+// data2.save(err=>{
+//   if(!err){
+//     console.log("succeedd");
+//   }
+// })
+
 // a post route to the logout functionality
-app.post("/logout", function (req, res) {
+app.get("/logout", function (req, res) {
   req.session.value = "NA";
   req.session.destroy();
   console.log("cookie deleted");
@@ -432,7 +445,7 @@ app.get("/dashboard", function (req, res) {
 
 app.get("/classroom", function (req, res) {
   const pos = req.query.pos;
-  console.log(pos);
+  console.log(pos, "classroom");
   try {
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
@@ -562,16 +575,15 @@ app.post("/people", function (req, res) {
     });
 });
 
-app.get("/teams", function (req, res) {
+app.get("/teams", async function (req, res) {
   try {
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
     if (!claims) {
       res.status(201).json({ msg: "unauthorized" });
     }
-    console.log("teamClaimstype", claims.type);
+    console.log(claims, "teamsclaims");
     if (claims.type === 1) {
-      let currentClass;
       student
         .findOne({ _id: claims._id })
         .populate("classesEnrolled")
@@ -584,38 +596,47 @@ app.get("/teams", function (req, res) {
           populate: { path: "teams", populate: { path: "members" } },
         })
         .exec(function (err, currentStudent) {
-          currentClass = currentStudent.classesEnrolled[req.query.pos];
-          if (currentClass.teams) {
-            currentClass.teams.map((currentTeam, index) => {
-              if (currentTeam.members) {
-                var found = false;
-                currentTeam.members.map((currentMember) => {
-                  console.log(currentMember._id, " ", claims._id);
-                  if (currentMember._id.toString() === claims._id.toString()) {
-                    found = true;
-                    console.log("here");
-                    return;
-                  }
-                });
-                if (found) {
-                  return res
-                    .status(200)
-                    .json({ teamData: currentTeam, type: 1 });
-                } else {
-                  console.log("her2");
-                  return res
-                    .status(201)
-                    .json({ type: 1, msg: "not member of any team" });
+          console.log(
+            currentStudent.classesEnrolled[req.query.pos].teams,
+            "currentStudentteams"
+          );
+          if (
+            currentStudent.classesEnrolled[req.query.pos].teams.length !== 0
+          ) {
+            console.log("here");
+            var found = false;
+            let fteam;
+            currentStudent.classesEnrolled[req.query.pos].teams.map(
+              (currentTeam, index) => {
+                console.log(currentTeam, "current Team");
+                if (currentTeam.members) {
+                  console.log(currentTeam, "found");
+                  currentTeam.members.map((currentMemberId) => {
+                    if (
+                      currentMemberId._id.toString() === claims._id.toString()
+                    ) {
+                      found = true;
+                      fteam = currentTeam;
+                      console.log("here3");
+                    }
+                  });
                 }
               }
-              console.log(her3);
-              res.status(201).json({ type: 1, msg: "not member of any team" });
-            });
+            );
+            if (found) {
+              console.log("here4");
+              res.status(200).json({ teamData: fteam, type: claims.type });
+            } else {
+              console.log("here5");
+              res.status(200).json({ type: claims.type });
+            }
+          } else {
+            console.log("no team exists");
+            res.status(200).json({ teamData: null, type: claims.type });
           }
         });
     }
     if (claims.type === 2) {
-      let currentClass;
       teacher
         .findOne({ _id: claims._id })
         .populate("classesEnrolled")
@@ -629,18 +650,21 @@ app.get("/teams", function (req, res) {
         })
         .exec(function (err, currentTeacher) {
           currentClass = currentTeacher.classesEnrolled[req.query.pos];
-          if (currentClass.teams) {
-            console.log(currentClass.teams);
-            res
-              .status(200)
-              .json({ teamData: currentClass.teams, type: claims.type });
+          if (currentTeacher.classesEnrolled[req.query.pos].teams) {
+            console.log(currentTeacher.classesEnrolled[req.query.pos].teams);
+            res.status(200).json({
+              teamData: currentTeacher.classesEnrolled[req.query.pos].teams,
+              type: claims.type,
+            });
           }
+          res.status(200).json({ teamData: null, type: claims.type });
         });
     }
   } catch (e) {
     console.log(e);
   }
 });
+
 function maketeamCode(length) {
   var result = "";
   var characters =
@@ -662,18 +686,19 @@ app.post("/classroom/createteam", (req, res) => {
       .findOne({ _id: claims._id })
       .populate("classesEnrolled")
       .exec(async (err, currentStudent) => {
-        const currentClass = currentStudent.classesEnrolled[req.body.pos];
         const data = new team({
           teamName: req.body.name,
           teamCode: maketeamCode(6),
-          classAssociated: currentClass,
+          // classAssociated: currentStudent.classesEnrolled[req.body.pos],
           members: claims._id,
           teamChat: [],
           teacherChat: [],
         });
-        currentClass.teams.push(data);
-        await currentClass.save();
+
+        currentStudent.classesEnrolled[req.body.pos].teams.push(data);
+        await currentStudent.classesEnrolled[req.body.pos].save();
         await data.save();
+        res.status(200).josn("ok");
       });
   } catch (e) {
     console.log(e);
@@ -694,46 +719,65 @@ app.post("/classroom/jointeam", (req, res) => {
         path: "classesEnrolled",
         populate: { path: "teams" },
       })
+      
       .exec((err, currentStudent) => {
         const currentClass = currentStudent.classesEnrolled[req.body.pos];
         if (currentClass.teams) {
           console.log("teams", currentClass.teams);
+          var found = false;
+          
           currentClass.teams.map((currentTeam, index) => {
             if (currentTeam.members) {
-              currentTeam.members.findOne(
-                { _id: claims._id },
-                (err, foundMember) => {
-                  if (err) {
-                    console.log(err);
-                  } else {
-                    if (foundMember) {
-                      return res
-                        .status(200)
-                        .json({ msg: "Member of existing team" });
-                    } else {
-                      team.findOne(
-                        { teamCode: req.body.teamCode },
-                        (err, currentTeam) => {
-                          if (err) {
-                            console.log(err);
-                          } else {
-                            currentTeam.members.push(claims._id);
-                          }
-                        }
-                      );
-                    }
-                  }
+              currentTeam.members.map((currentMember, index) => {
+                if (currentMember._id.toString() === claims._id.toString()) {
+                  console.log("found");
+                  found = true;
                 }
-              );
+              });
             }
           });
+          console.log("found",found);
+          if(found){
+            res.status(200).josn({msg:"already a member"})
+          }else{
+            team.findOne(
+                  { teamCode: req.body.teamCode },
+                  (err, currentTeam) => {
+                    if (err) {
+                      console.log(err);
+                    } else {
+                      currentTeam.members.push(claims._id);
+                      currentTeam.save();
+                      res.status(200).json({msg:"succefully joined team"})
+                    }
+                  }
+                );
+          }
         }
       });
   } catch (e) {
     console.log(e);
   }
 });
-
+// if (foundMember) {
+//   return res
+//     .status(200)
+//     .json({ msg: "Member of existing team" });
+// } else {
+//   console.log("inside findone");
+//   team.findOne(
+//     { teamCode: req.body.teamCode },
+//     (err, currentTeam) => {
+//       if (err) {
+//         console.log(err);
+//       } else {
+//         currentTeam.members.push(claims._id);
+//       }
+//     }
+//   );
+// }
+// );
+// }
 app.post("/createChat", (req, res) => {
   try {
     const event = new Date();
@@ -892,68 +936,6 @@ app.get("/teamselected", (req, res) => {
     console.log(e);
   }
 });
-
-app.post("/unenroll", function (req, res) {
-  try {
-    const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
-    if (!claims) {
-      res.status(201).json({ msg: "unauthorized" });
-    }
-    const pos = res.query.pos;
-    var query = student.findOne(
-      { _id: claims._id },
-      function (err, currentStudent) {
-        if (err) {
-          console.log(err);
-        } else {
-          const classID = currentStudent.classesEnrolled[pos];
-          currentStudent.classesEnrolled.pull({
-            _id: classID,
-          });
-        }
-        var q = classroom.findById(classID, function (e, currentClass) {
-          if (e) {
-            console.log(e);
-          } else {
-            var q3 = currentClass.studentsEnrolled.pull({
-              _id: currentStudent._id,
-            });
-          }
-        });
-        currentStudent.save();
-        res.status(200).json({ message: "Success" });
-      }
-    );
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-app.post("/deleteclassroom", function (req, res) {
-  try {
-    const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
-    if (!claims) {
-      res.status(201).json({ msg: "unauthorized" });
-    }
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-app.post("/leaveteam", function (req, res) {
-  try {
-    const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
-    if (!claims) {
-      res.status(201).json({ msg: "unauthorized" });
-    }
-  } catch (err) {
-    console.log(err);
-  }
-});
-
 // Listening to the port PORT.
 app.listen(PORT, function () {
   console.log("Server is listening to port ", PORT);

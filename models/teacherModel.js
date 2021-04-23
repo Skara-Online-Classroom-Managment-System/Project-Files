@@ -1,3 +1,4 @@
+// requiring the mongoose module
 const mongoose = require("mongoose");
 
 // Defining the schema of teacher.

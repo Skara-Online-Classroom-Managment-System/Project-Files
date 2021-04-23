@@ -1,3 +1,4 @@
+// requiring the mongoose library
 const mongoose = require("mongoose");
 
 // Defining the schema of classroom.

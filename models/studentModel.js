@@ -15,11 +15,11 @@ const studentSchema = new mongoose.Schema({
   ],
   password: String,
 });
-studentSchema.methods = {
-  checkPassword: function (inputPassword) {
-    return bcrypt.compareSync(inputPassword, this.password);
-  },
-};
+// studentSchema.methods = {
+//   checkPassword: function (inputPassword) {
+//     return bcrypt.compareSync(inputPassword, this.password);
+//   },
+// };
 
 const student = mongoose.model("student", studentSchema);
 //exporting the student model
