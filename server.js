@@ -1041,6 +1041,49 @@ app.get("/delete", (req, res) => {
     console.log(e);
   }
 });
+
+
+app.get("/leaveteam",(req,res)=>{
+  try {
+    console.log("inside leave")
+    const cookie = req.session.value;
+    const claims = jwt.verify(cookie, "secret");
+    if (claims.type === 1) {
+      student
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .exec(async (err, foundStudent) => {
+          if (err) {
+            console.log(err);
+          } else {
+            classroom.findOne(
+              { _id: foundStudent.classesEnrolled[req.query.pos] })
+              .populate("teams")
+              .exec(async (err, foundClass) => {
+                let position;
+                console.log("foundClas:",foundClass);
+                foundClass.teams.map(async (currentTeam, index) => {
+                  currentTeam.members.map((id,index)=>{
+                    if (id.toString() === claims._id.toString()) {
+                      position = index;
+                    }
+                  })
+                  currentTeam.members.splice(position,position+1);
+                  if(currentTeam.members.length===0){
+                    await currentTeam.delete();
+                  }
+                  console.log("successfully updated team")
+                await currentTeam.save();
+                });
+              }
+            );
+          }
+        });
+    }
+  } catch (e) {
+    console.log(e);
+  }
+})
 // Listening to the port PORT.
 app.listen(PORT, function () {
   console.log("Server is listening to port ", PORT);
