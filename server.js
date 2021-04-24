@@ -1084,6 +1084,46 @@ app.get("/leaveteam",(req,res)=>{
     console.log(e);
   }
 })
+
+app.get("/deleteannouncement",(req,res)=>{
+  try {
+    console.log("inside delete")
+    const cookie = req.session.value;
+    const claims = jwt.verify(cookie, "secret");
+    if (claims.type === 2) {
+      teacher
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .exec(async (err, foundTeacher) => {
+          if (err) {
+            console.log(err);
+          } else {
+            classroom.findOne(
+              
+              { _id: foundTeacher.classesEnrolled[req.query.pos] })
+              .populate("teams")
+              .exec(async (err, foundClass) => {
+                console.log("foundClas:",foundClass);
+                console.log(req.query.announcementPos)
+                const length=foundClass.announcements.length;
+                console.log("length",length);
+                if(length-req.query.announcementPos-1===0){
+                  foundClass.announcements.splice(length-req.query.announcementPos-1,length-req.query.announcementPos);  
+                  }else{
+                  foundClass.announcements.splice(length-req.query.announcementPos-1,length-req.query.announcementPos-1);
+                  }
+                await foundClass.save();
+                console.log("successfully deleted announcement")
+                res.status(200);
+              }
+            );
+          }
+        });
+    }
+  } catch (e) {
+    console.log(e);
+  }
+})
 // Listening to the port PORT.
 app.listen(PORT, function () {
   console.log("Server is listening to port ", PORT);
