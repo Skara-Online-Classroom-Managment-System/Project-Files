@@ -103,7 +103,8 @@ app.get("/user", async (req, res) => {
           res.status(200).json(details);
         }
       });
-    } else if (claims.type === 2) {
+    }
+    if (claims.type === 2) {
       teacher.findOne({ _id: claims._id }, function (err, currentTeacher) {
         if (err) {
           console.log(err);
@@ -650,13 +651,16 @@ app.get("/teams", async function (req, res) {
         })
         .exec(function (err, currentTeacher) {
           if (currentTeacher.classesEnrolled[req.query.pos].teams) {
-            console.log(currentTeacher.classesEnrolled[req.query.pos].teams,"teams");
+            console.log(
+              currentTeacher.classesEnrolled[req.query.pos].teams,
+              "teams"
+            );
             res.status(200).json({
               teamData: currentTeacher.classesEnrolled[req.query.pos].teams,
               type: claims.type,
             });
-          }else{
-            res.status(200).json({msg:"no teams in the class"})
+          } else {
+            res.status(200).json({ msg: "no teams in the class" });
           }
         });
     }
@@ -719,13 +723,13 @@ app.post("/classroom/jointeam", (req, res) => {
         path: "classesEnrolled",
         populate: { path: "teams" },
       })
-      
+
       .exec((err, currentStudent) => {
         const currentClass = currentStudent.classesEnrolled[req.body.pos];
         if (currentClass.teams) {
           console.log("teams", currentClass.teams);
           var found = false;
-          
+
           currentClass.teams.map((currentTeam, index) => {
             if (currentTeam.members) {
               currentTeam.members.map((currentMember, index) => {
@@ -736,22 +740,22 @@ app.post("/classroom/jointeam", (req, res) => {
               });
             }
           });
-          console.log("found",found);
-          if(found){
-            res.status(200).josn({msg:"already a member"})
-          }else{
+          console.log("found", found);
+          if (found) {
+            res.status(200).josn({ msg: "already a member" });
+          } else {
             team.findOne(
-                  { teamCode: req.body.teamCode },
-                  (err, currentTeam) => {
-                    if (err) {
-                      console.log(err);
-                    } else {
-                      currentTeam.members.push(claims._id);
-                      currentTeam.save();
-                      res.status(200).json({msg:"succefully joined team"})
-                    }
-                  }
-                );
+              { teamCode: req.body.teamCode },
+              (err, currentTeam) => {
+                if (err) {
+                  console.log(err);
+                } else {
+                  currentTeam.members.push(claims._id);
+                  currentTeam.save();
+                  res.status(200).json({ msg: "succefully joined team" });
+                }
+              }
+            );
           }
         }
       });
@@ -929,11 +933,108 @@ app.get("/teamselected", (req, res) => {
           const currentTeam = currentClass.teams[req.query.teampos];
           console.log(currentTeam, "currentTeam");
           // team.findOne({ _id: currentTeam._id }, function (err, foundTeam) {
-            // if (!err) {
-              // console.log(foundTeam);
-              res.status(200).json({ teamDetails: currentTeam });
-            // }
-          
+          // if (!err) {
+          // console.log(foundTeam);
+          res.status(200).json({ teamDetails: currentTeam });
+          // }
+        });
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+app.get("/unenroll", (req, res) => {
+  console.log(req.query.pos);
+  try {
+    const cookie = req.session.value;
+    const claims = jwt.verify(cookie, "secret");
+    if (claims.type === 1) {
+      student
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .exec(async (err, foundStudent) => {
+          if (err) {
+            console.log(err);
+          } else {
+            classroom.findOne(
+              { _id: foundStudent.classesEnrolled[req.query.pos] },
+              (err, foundClass) => {
+                let position;
+                foundClass.studentsEnrolled.map((id, index) => {
+                  if (id.toString() === claims._id.toString()) {
+                    position = index;
+                  }
+                });
+                foundClass.studentsEnrolled.splice(position, position + 1);
+                foundClass.save();
+              }
+            );
+            foundStudent.classesEnrolled.splice(
+              req.query.pos,
+              req.query.pos + 1
+            );
+            await foundStudent.save();
+          }
+        });
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+app.get("/delete", (req, res) => {
+  try {
+    const cookie = req.session.value;
+    const claims = jwt.verify(cookie, "secret");
+    if (claims.type === 2) {
+      teacher
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .exec(async (err, foundTeacher) => {
+          if (err) {
+            console.log(err);
+          } else {
+            classroom.findOne(
+              { _id: foundTeacher.classesEnrolled[req.query.pos] },
+              async (err, foundClass) => {
+                await foundClass.studentsEnrolled.map(async (id, index) => {
+                  await student.findOne({ _id: id }, (err, foundStudent) => {
+                    foundStudent.classesEnrolled.map(
+                      async (currentClass, index) => {
+                        if (currentClass.toString() === foundClass._id.toString()) {
+                          foundStudent.classesEnrolled.splice(index, index + 1);
+                          console.log("student updated");
+                          await foundStudent.save();
+                        }
+                      }
+                    );
+                  });
+                });
+                foundClass.teams.map(async (currentTeam, index) => {
+                  await team.deleteOne({ _id: currentTeam }, (err) => {
+                    if (err) {
+                      console.log(err);
+                    } else {
+                      console.log("succesfully team deleted");
+                    }
+                  });
+                });
+                await classroom.deleteOne({ _id: foundClass._id }, (err) => {
+                  if (err) {
+                    console.log(err);
+                  } else {
+                    console.log("succesfully Classroom deleted");
+                  }
+                });
+              }
+            );
+            foundTeacher.classesEnrolled.splice(
+              req.query.pos,
+              req.query.pos + 1
+            );
+            await foundTeacher.save();
+          }
         });
     }
   } catch (e) {
