@@ -805,7 +805,10 @@ app.post("/createChat", (req, res) => {
             if (currentTeam._id.toString() === req.body.id.toString()) {
               // console.log()
               const data = {
-                author: claims._id,
+                author: {
+                  name: foundStudent.firstName,
+                  id: claims._id,
+                },
                 text: req.body.message,
                 time: event.toLocaleTimeString("en-US"),
               };
@@ -813,6 +816,7 @@ app.post("/createChat", (req, res) => {
               currentTeam.teamChat.push(data);
               await currentTeam.save(function (err) {
                 if (!err) {
+                  
                   console.log("inside save");
                   res.status(200).json({ class: currentTeam });
                 }
@@ -843,21 +847,22 @@ app.post("/teacherchat", (req, res) => {
           if (err) {
             console.log(err);
           } else {
-            // console.log(req.params.pos);
             const foundClass = foundStudent.classesEnrolled[req.body.pos];
-            // console.log(foundClass.teams,"createchat");
             foundClass.teams.map(async (currentTeam, index) => {
               if (currentTeam._id.toString() === req.body.id.toString()) {
-                // console.log()
                 const data = {
-                  author: claims._id,
+                  author: {
+                    name:foundStudent.firstName,
+                    id:claims._id
+                  },
                   text: req.body.message,
                   time: event.toLocaleTimeString("en-US"),
                 };
-                // console.log("chat mein map",currentTeam.teamChat)
+                console.log(data, "data");
                 currentTeam.teacherChat.push(data);
-                await currentTeam.save(function (err) {
+                await currentTeam.save(function (err, result) {
                   if (!err) {
+                    
                     console.log("inside save");
                     res.status(200).json({ class: currentTeam });
                   }
@@ -879,23 +884,30 @@ app.post("/teacherchat", (req, res) => {
           if (err) {
             console.log(err);
           } else {
-            // console.log(req.params.pos);
             const foundClass = foundTeacher.classesEnrolled[req.body.pos];
-            // console.log(foundClass.teams,"createchat");
             foundClass.teams.map(async (currentTeam, index) => {
               if (currentTeam._id.toString() === req.body.id.toString()) {
-                // console.log()
                 const data = {
-                  author: claims._id,
+                  author: {
+                    name: foundTeacher.firstName,
+                    id: claims._id,
+                  },
                   text: req.body.message,
                   time: event.toLocaleTimeString("en-US"),
                 };
-                // console.log("chat mein map",currentTeam.teamChat)
                 currentTeam.teacherChat.push(data);
                 await currentTeam.save(function (err) {
                   if (!err) {
-                    console.log("inside save");
-                    res.status(200).json({ class: currentTeam });
+                    // team
+                    //   .findOne({ _id: currentTeam._id })
+                    //   .populate({
+                    //     path: "teamChat",
+                    //     populate: { path: "author" },
+                    //   })
+                    //   .exec((err, foundTeam) => {
+                        console.log("inside save");
+                        res.status(200).json({ class: currentTeam });
+                      // });
                   }
                 });
               }
@@ -1002,7 +1014,9 @@ app.get("/delete", (req, res) => {
                   await student.findOne({ _id: id }, (err, foundStudent) => {
                     foundStudent.classesEnrolled.map(
                       async (currentClass, index) => {
-                        if (currentClass.toString() === foundClass._id.toString()) {
+                        if (
+                          currentClass.toString() === foundClass._id.toString()
+                        ) {
                           foundStudent.classesEnrolled.splice(index, index + 1);
                           console.log("student updated");
                           await foundStudent.save();
@@ -1042,10 +1056,9 @@ app.get("/delete", (req, res) => {
   }
 });
 
-
-app.get("/leaveteam",(req,res)=>{
+app.get("/leaveteam", (req, res) => {
   try {
-    console.log("inside leave")
+    console.log("inside leave");
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
     if (claims.type === 1) {
@@ -1056,38 +1069,37 @@ app.get("/leaveteam",(req,res)=>{
           if (err) {
             console.log(err);
           } else {
-            classroom.findOne(
-              { _id: foundStudent.classesEnrolled[req.query.pos] })
+            classroom
+              .findOne({ _id: foundStudent.classesEnrolled[req.query.pos] })
               .populate("teams")
               .exec(async (err, foundClass) => {
                 let position;
-                console.log("foundClas:",foundClass);
+                console.log("foundClas:", foundClass);
                 foundClass.teams.map(async (currentTeam, index) => {
-                  currentTeam.members.map((id,index)=>{
+                  currentTeam.members.map((id, index) => {
                     if (id.toString() === claims._id.toString()) {
                       position = index;
                     }
-                  })
-                  currentTeam.members.splice(position,position+1);
-                  if(currentTeam.members.length===0){
+                  });
+                  currentTeam.members.splice(position, position + 1);
+                  if (currentTeam.members.length === 0) {
                     await currentTeam.delete();
                   }
-                  console.log("successfully updated team")
-                await currentTeam.save();
+                  console.log("successfully updated team");
+                  await currentTeam.save();
                 });
-              }
-            );
+              });
           }
         });
     }
   } catch (e) {
     console.log(e);
   }
-})
+});
 
-app.get("/deleteannouncement",(req,res)=>{
+app.get("/deleteannouncement", (req, res) => {
   try {
-    console.log("inside delete")
+    console.log("inside delete");
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
     if (claims.type === 2) {
@@ -1098,32 +1110,36 @@ app.get("/deleteannouncement",(req,res)=>{
           if (err) {
             console.log(err);
           } else {
-            classroom.findOne(
-              
-              { _id: foundTeacher.classesEnrolled[req.query.pos] })
+            classroom
+              .findOne({ _id: foundTeacher.classesEnrolled[req.query.pos] })
               .populate("teams")
               .exec(async (err, foundClass) => {
-                console.log("foundClas:",foundClass);
-                console.log(req.query.announcementPos)
-                const length=foundClass.announcements.length;
-                console.log("length",length);
-                if(length-req.query.announcementPos-1===0){
-                  foundClass.announcements.splice(length-req.query.announcementPos-1,length-req.query.announcementPos);  
-                  }else{
-                  foundClass.announcements.splice(length-req.query.announcementPos-1,length-req.query.announcementPos-1);
-                  }
+                console.log("foundClas:", foundClass);
+                console.log(req.query.announcementPos);
+                const length = foundClass.announcements.length;
+                console.log("length", length);
+                if (length - req.query.announcementPos - 1 === 0) {
+                  foundClass.announcements.splice(
+                    length - req.query.announcementPos - 1,
+                    length - req.query.announcementPos
+                  );
+                } else {
+                  foundClass.announcements.splice(
+                    length - req.query.announcementPos - 1,
+                    length - req.query.announcementPos - 1
+                  );
+                }
                 await foundClass.save();
-                console.log("successfully deleted announcement")
+                console.log("successfully deleted announcement");
                 res.status(200);
-              }
-            );
+              });
           }
         });
     }
   } catch (e) {
     console.log(e);
   }
-})
+});
 // Listening to the port PORT.
 app.listen(PORT, function () {
   console.log("Server is listening to port ", PORT);
