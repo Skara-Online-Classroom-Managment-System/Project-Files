@@ -83,10 +83,11 @@ const { createBrotliCompress } = require("zlib");
 // })
 
 // a post route to the logout functionality
-app.get("/logout", function (req, res) {
+app.post("/logout", function (req, res) {
   req.session.value = "NA";
   req.session.destroy();
   console.log("cookie deleted");
+  res.status(200).json({msg:"logout successfully"})
 });
 
 // a user route to render the nav bar
@@ -702,7 +703,7 @@ app.post("/classroom/createteam", (req, res) => {
         currentStudent.classesEnrolled[req.body.pos].teams.push(data);
         await currentStudent.classesEnrolled[req.body.pos].save();
         await data.save();
-        res.status(200).josn("ok");
+        res.status(200).json({msg:"ok"});
       });
   } catch (e) {
     console.log(e);
@@ -1048,6 +1049,7 @@ app.get("/delete", (req, res) => {
               req.query.pos + 1
             );
             await foundTeacher.save();
+            res.status(200).json({msg:"deleted"});
           }
         });
     }
@@ -1084,9 +1086,15 @@ app.get("/leaveteam", (req, res) => {
                   currentTeam.members.splice(position, position + 1);
                   if (currentTeam.members.length === 0) {
                     await currentTeam.delete();
+                    
+                    res.status(200).json({msg:"left team"});
+                  }else{
+                    console.log("successfully updated team");
+                    await currentTeam.save();
+                    console.log("hello")
+                    res.status(200).json({msg:"left team"});
                   }
-                  console.log("successfully updated team");
-                  await currentTeam.save();
+                 
                 });
               });
           }
@@ -1131,7 +1139,7 @@ app.get("/deleteannouncement", (req, res) => {
                 }
                 await foundClass.save();
                 console.log("successfully deleted announcement");
-                res.status(200);
+                res.status(200).json({msg:"deleted"});
               });
           }
         });
