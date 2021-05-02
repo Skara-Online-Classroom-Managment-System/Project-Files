@@ -129,7 +129,7 @@ app.post("/teachersignup", async function (req, res) {
     async function (err, currentTeacher) {
       if (err) throw err;
       if (currentTeacher) {
-        console.log("eamil")
+        console.log("eamil");
         res
           .status(201)
           .json({ msg: "This email has already been registered." });
@@ -180,13 +180,13 @@ app.post("/teacherlogin", function (req, res, next) {
                 req.session.value = token;
                 res.status(200).json({ username: enteredDetails.username });
               } else {
-                res.status(201).json({msg:"Enter correct password"});
+                res.status(201).json({ msg: "Enter correct password" });
               }
             }
           );
         } else {
-          console.log("email")
-          res.status(201).json({msg:"email id does not exist"});
+          console.log("email");
+          res.status(201).json({ msg: "email id does not exist" });
         }
       }
     }
@@ -264,7 +264,7 @@ app.post("/studentlogin", function (req, res) {
             }
           );
         } else {
-          console.log("invalid")
+          console.log("invalid");
           res.status(201).json({ msg: "invalid credentials" });
         }
       }
@@ -702,14 +702,15 @@ app.post("/classroom/createteam", (req, res) => {
         const data = new team({
           teamName: req.body.name,
           teamCode: maketeamCode(6),
-          // classAssociated: currentStudent.classesEnrolled[req.body.pos],
           members: claims._id,
           teamChat: [],
           teacherChat: [],
+          projectLink: "",
         });
 
         currentStudent.classesEnrolled[req.body.pos].teams.push(data);
         await currentStudent.classesEnrolled[req.body.pos].save();
+        console.log("saving");
         await data.save();
         res.status(200).json({ msg: "ok" });
       });
@@ -762,10 +763,11 @@ app.post("/classroom/jointeam", (req, res) => {
                   if (currentTeam) {
                     currentTeam.members.push(claims._id);
                     currentTeam.save();
-                    res.status(200).json({ result: "successfully joined team" });
-                  }
-                  else{
-                    res.status(200).json({result:"no such team exists"})
+                    res
+                      .status(200)
+                      .json({ result: "successfully joined team" });
+                  } else {
+                    res.status(200).json({ result: "no such team exists" });
                   }
                 }
               }
@@ -1097,10 +1099,12 @@ app.get("/leaveteam", (req, res) => {
                   currentTeam.members.splice(position, position + 1);
                   if (currentTeam.members.length === 0) {
                     await currentTeam.delete();
+                    res.status(200).json({ msg: "left team" });
+                  } else {
+                    console.log("successfully updated team");
+                    await currentTeam.save();
+                    res.status(200).json({ msg: "left team" });
                   }
-                  console.log("successfully updated team");
-                  await currentTeam.save();
-                  res.status(200).json({ msg: "left team" });
                 });
               });
           }
@@ -1137,7 +1141,6 @@ app.post("/submitproject", (req, res) => {
                       return res.status(200).json({ msg: "submitted" });
                     }
                   });
-                  
                 });
               });
           }
