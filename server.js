@@ -87,7 +87,7 @@ app.post("/logout", function (req, res) {
   req.session.value = "NA";
   req.session.destroy();
   console.log("cookie deleted");
-  res.status(200).json({msg:"logout successfully"})
+  res.status(200).json({ msg: "logout successfully" });
 });
 
 // a user route to render the nav bar
@@ -361,14 +361,19 @@ app.post("/addclass", function (req, res) {
   const classCode = req.body.classCode;
   var query = student
     .findOne({ _id: claims._id })
+    .populate("classesEnrolled")
     .exec(function (err, currentStudent) {
       if (err) {
         console.log(err);
       } else {
         var found = false;
         for (var i = 0; i < currentStudent.classesEnrolled.length; i++) {
-          if (currentStudent.classesEnrolled[i].classCode === classCode) {
+          if (
+            currentStudent.classesEnrolled[i].classCode.toString() ===
+            classCode.toString()
+          ) {
             found = true;
+            console.log("Class Enrolled in");
             break;
           }
         }
@@ -703,7 +708,7 @@ app.post("/classroom/createteam", (req, res) => {
         currentStudent.classesEnrolled[req.body.pos].teams.push(data);
         await currentStudent.classesEnrolled[req.body.pos].save();
         await data.save();
-        res.status(200).json({msg:"ok"});
+        res.status(200).json({ msg: "ok" });
       });
   } catch (e) {
     console.log(e);
@@ -817,7 +822,6 @@ app.post("/createChat", (req, res) => {
               currentTeam.teamChat.push(data);
               await currentTeam.save(function (err) {
                 if (!err) {
-                  
                   console.log("inside save");
                   res.status(200).json({ class: currentTeam });
                 }
@@ -853,8 +857,8 @@ app.post("/teacherchat", (req, res) => {
               if (currentTeam._id.toString() === req.body.id.toString()) {
                 const data = {
                   author: {
-                    name:foundStudent.firstName,
-                    id:claims._id
+                    name: foundStudent.firstName,
+                    id: claims._id,
                   },
                   text: req.body.message,
                   time: event.toLocaleTimeString("en-US"),
@@ -863,7 +867,6 @@ app.post("/teacherchat", (req, res) => {
                 currentTeam.teacherChat.push(data);
                 await currentTeam.save(function (err, result) {
                   if (!err) {
-                    
                     console.log("inside save");
                     res.status(200).json({ class: currentTeam });
                   }
@@ -906,9 +909,9 @@ app.post("/teacherchat", (req, res) => {
                     //     populate: { path: "author" },
                     //   })
                     //   .exec((err, foundTeam) => {
-                        console.log("inside save");
-                        res.status(200).json({ class: currentTeam });
-                      // });
+                    console.log("inside save");
+                    res.status(200).json({ class: currentTeam });
+                    // });
                   }
                 });
               }
@@ -1049,7 +1052,7 @@ app.get("/delete", (req, res) => {
               req.query.pos + 1
             );
             await foundTeacher.save();
-            res.status(200).json({msg:"deleted"});
+            res.status(200).json({ msg: "deleted" });
           }
         });
     }
@@ -1086,15 +1089,46 @@ app.get("/leaveteam", (req, res) => {
                   currentTeam.members.splice(position, position + 1);
                   if (currentTeam.members.length === 0) {
                     await currentTeam.delete();
-                    
-                    res.status(200).json({msg:"left team"});
-                  }else{
-                    console.log("successfully updated team");
-                    await currentTeam.save();
-                    console.log("hello")
-                    res.status(200).json({msg:"left team"});
                   }
-                 
+                  console.log("successfully updated team");
+                  await currentTeam.save();
+                  res.status(200).json({ msg: "left team" });
+                });
+              });
+          }
+        });
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+app.get("/submitproject", (req, res) => {
+  try {
+    const cookie = req.session.value;
+    const claims = jwt.verify(cookie, "secret");
+    if (claims.type === 1) {
+      student
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .exec(async (err, foundStudent) => {
+          if (err) {
+            console.log(err);
+          } else {
+            classroom
+              .findOne({ _id: foundStudent.classesEnrolled[req.query.pos] })
+              .populate("teams")
+              .exec(async (err, foundClass) => {
+                let position;
+                console.log("foundClas:", foundClass);
+                foundClass.teams.map(async (currentTeam, index) => {
+                  currentTeam.members.map((id, index) => {
+                    if (id.toString() === claims._id.toString()) {
+                      currentTeam.projectLink = req.body.projectLink;
+                      currentTeam.save();
+                    }
+                  });
+                  res.status(200).json({ msg: "submitted" });
                 });
               });
           }
@@ -1139,7 +1173,7 @@ app.get("/deleteannouncement", (req, res) => {
                 }
                 await foundClass.save();
                 console.log("successfully deleted announcement");
-                res.status(200).json({msg:"deleted"});
+                res.status(200).json({ msg: "deleted" });
               });
           }
         });
@@ -1148,6 +1182,77 @@ app.get("/deleteannouncement", (req, res) => {
     console.log(e);
   }
 });
+
+// delete the profile
+app.post("/deleteprofile", (req, res) => {
+  try {
+    console.log("inside delete profile");
+    const cookie = req.session.value;
+    const claims = jwt.verify(cookie, "secret");
+    if (claims.type === 2) {
+      teacher.findById(claims._id, function (err, currentTeacher) {
+        if (err) {
+          console.log(err);
+        } else {
+          currentTeacher.classesEnrolled.map((classID, index) => {
+            classroom.findById(classID, function (err, currentClassroom) {
+              if (err) {
+                console.log(err);
+              } else {
+                student.updateMany(
+                  { _id: { $in: currentClassroom.studentsEnrolled } },
+                  { $pull: { classesEnrolled: currentClassroom._id } },
+                  function (err) {
+                    if (err) {
+                      console.log(err);
+                    }
+                  }
+                );
+                currentClassroom.remove();
+              }
+            });
+          });
+        }
+        currentTeacher.remove();
+      });
+      console.log("teacher delete");
+      res.status(200).json({ msg: "teacher deleted" });
+    } else if (claims.type === 1) {
+      student.findOne({ _id: claims._id }, function (err, currentStudent) {
+        if (err) {
+          console.log(err);
+        } else {
+          classroom.updateMany(
+            { _id: { $in: currentStudent.classesEnrolled } },
+            { $pull: { studentsEnrolled: currentStudent._id } },
+            function (err) {
+              if (err) {
+                console.log(err);
+              }
+            }
+          );
+          team
+            .populate("members")
+            .updateMany(
+              { members: { $elemMatch: { _id: currentStudent._id } } },
+              { $pull: { members: currentStudent._id } },
+              function (err) {
+                if (err) {
+                  console.log(err);
+                }
+              }
+            );
+          currentStudent.remove();
+        }
+      });
+      console.log("student delete");
+      res.status(200).json({ msg: "student deleted" });
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 // Listening to the port PORT.
 app.listen(PORT, function () {
   console.log("Server is listening to port ", PORT);
