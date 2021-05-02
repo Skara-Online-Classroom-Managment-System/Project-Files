@@ -100,8 +100,10 @@ app.get("/user", async (req, res) => {
         if (err) {
           console.log(err);
         } else {
-          var { _id, password, ...details } = currentStudent._doc;
-          res.status(200).json(details);
+          if (currentStudent) {
+            var { _id, password, ...details } = currentStudent._doc;
+            res.status(200).json(details);
+          }
         }
       });
     }
@@ -127,13 +129,14 @@ app.post("/teachersignup", async function (req, res) {
     async function (err, currentTeacher) {
       if (err) throw err;
       if (currentTeacher) {
+        console.log("eamil")
         res
           .status(201)
-          .json({ Text: "This email has already been registered." });
+          .json({ msg: "This email has already been registered." });
       }
       if (!currentTeacher) {
         if (req.body.password === "") {
-          res.status(201).json({ Message: "Enter a valid password." });
+          res.status(201).json({ msg: "Enter a valid password." });
         }
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         const newTeacher = new teacher({
@@ -177,12 +180,13 @@ app.post("/teacherlogin", function (req, res, next) {
                 req.session.value = token;
                 res.status(200).json({ username: enteredDetails.username });
               } else {
-                console.log("Enter correct password");
+                res.status(201).json({msg:"Enter correct password"});
               }
             }
           );
         } else {
-          console.log("email id does not exist");
+          console.log("email")
+          res.status(201).json({msg:"email id does not exist"});
         }
       }
     }
@@ -198,11 +202,11 @@ app.post("/studentsignup", function (req, res) {
         console.log(err);
       }
       if (currentStudent) {
-        res.status(201).json({ Text: "This SID has already been registered." });
+        res.status(201).json({ msg: "This SID has already been registered." });
       }
       if (!currentStudent) {
         if (req.body.password === "") {
-          res.status(201).json({ Message: "Enter a valid password." });
+          res.status(201).json({ msg: "Enter a valid password." });
         }
         await bcrypt.hash(
           req.body.password,
@@ -255,12 +259,13 @@ app.post("/studentlogin", function (req, res) {
                   .status(200)
                   .json({ username: enteredDetails.username });
               } else {
-                return res.status(201).json({ msg: "Enter correct password" });
+                return res.status(201).json({ msg: "invalid credentials" });
               }
             }
           );
         } else {
-          console.log("sid does not exist");
+          console.log("invalid")
+          res.status(201).json({ msg: "invalid credentials" });
         }
       }
     }
@@ -378,7 +383,7 @@ app.post("/addclass", function (req, res) {
           }
         }
         if (found) {
-          res.status(201).json({ result: "Class is already enrolled in" });
+          res.status(200).json({ result: "Class is already enrolled in" });
         } else {
           var nQuery = classroom.findOne(
             { classCode: classCode },
@@ -391,11 +396,9 @@ app.post("/addclass", function (req, res) {
                   currentStudent.classesEnrolled.push(currentClassroom);
                   currentStudent.save();
                   currentClassroom.save();
-                  // console.log(currentClassroom.studentsEnrolled);
-                  // console.log(currentStudent.classesEnrolled);
-                  res.status(200).json({ text: "Success" });
+                  res.status(200).json({ result: "Success" });
                 } else {
-                  res.status(201).json({ text: "Class not found" });
+                  res.status(200).json({ result: "Class not found" });
                 }
               }
             }
@@ -720,7 +723,7 @@ app.post("/classroom/jointeam", (req, res) => {
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
     if (!claims) {
-      res.status(201).json({ msg: "unauthorized" });
+      res.status(200).json({ result: "unauthorized" });
     }
     student
       .findOne({ _id: claims._id })
@@ -748,7 +751,7 @@ app.post("/classroom/jointeam", (req, res) => {
           });
           console.log("found", found);
           if (found) {
-            res.status(200).josn({ msg: "already a member" });
+            res.status(200).json({ result: "already a member" });
           } else {
             team.findOne(
               { teamCode: req.body.teamCode },
@@ -756,9 +759,14 @@ app.post("/classroom/jointeam", (req, res) => {
                 if (err) {
                   console.log(err);
                 } else {
-                  currentTeam.members.push(claims._id);
-                  currentTeam.save();
-                  res.status(200).json({ msg: "succefully joined team" });
+                  if (currentTeam) {
+                    currentTeam.members.push(claims._id);
+                    currentTeam.save();
+                    res.status(200).json({ result: "successfully joined team" });
+                  }
+                  else{
+                    res.status(200).json({result:"no such team exists"})
+                  }
                 }
               }
             );
@@ -1103,7 +1111,7 @@ app.get("/leaveteam", (req, res) => {
   }
 });
 
-app.get("/submitproject", (req, res) => {
+app.post("/submitproject", (req, res) => {
   try {
     const cookie = req.session.value;
     const claims = jwt.verify(cookie, "secret");
@@ -1116,19 +1124,20 @@ app.get("/submitproject", (req, res) => {
             console.log(err);
           } else {
             classroom
-              .findOne({ _id: foundStudent.classesEnrolled[req.query.pos] })
+              .findOne({ _id: foundStudent.classesEnrolled[req.body.pos] })
               .populate("teams")
               .exec(async (err, foundClass) => {
                 let position;
                 console.log("foundClas:", foundClass);
                 foundClass.teams.map(async (currentTeam, index) => {
-                  currentTeam.members.map((id, index) => {
+                  currentTeam.members.map(async (id, index) => {
                     if (id.toString() === claims._id.toString()) {
                       currentTeam.projectLink = req.body.projectLink;
-                      currentTeam.save();
+                      await currentTeam.save();
+                      return res.status(200).json({ msg: "submitted" });
                     }
                   });
-                  res.status(200).json({ msg: "submitted" });
+                  
                 });
               });
           }
@@ -1218,33 +1227,39 @@ app.post("/deleteprofile", (req, res) => {
       console.log("teacher delete");
       res.status(200).json({ msg: "teacher deleted" });
     } else if (claims.type === 1) {
-      student.findOne({ _id: claims._id }, function (err, currentStudent) {
-        if (err) {
-          console.log(err);
-        } else {
-          classroom.updateMany(
-            { _id: { $in: currentStudent.classesEnrolled } },
-            { $pull: { studentsEnrolled: currentStudent._id } },
-            function (err) {
-              if (err) {
-                console.log(err);
-              }
-            }
-          );
-          team
-            .populate("members")
-            .updateMany(
-              { members: { $elemMatch: { _id: currentStudent._id } } },
-              { $pull: { members: currentStudent._id } },
+      student
+        .findOne({ _id: claims._id })
+        .populate("classesEnrolled")
+        .populate({
+          path: "classesEnrolled",
+          populate: { path: "teams" },
+        })
+        .exec(function (err, currentStudent) {
+          if (err) {
+            console.log(err);
+          } else {
+            currentStudent.classesEnrolled.map((currentClass, index) => {
+              currentClass.teams.map((currentTeam, index) => {
+                currentTeam.members.map(async (currentMember, index) => {
+                  if (currentMember.toString() === claims._id) {
+                    await currentTeam.members.splice(index, index + 1);
+                    await currentTeam.save();
+                  }
+                });
+              });
+            });
+            classroom.updateMany(
+              { _id: { $in: currentStudent.classesEnrolled } },
+              { $pull: { studentsEnrolled: currentStudent._id } },
               function (err) {
                 if (err) {
                   console.log(err);
                 }
               }
             );
-          currentStudent.remove();
-        }
-      });
+            currentStudent.remove();
+          }
+        });
       console.log("student delete");
       res.status(200).json({ msg: "student deleted" });
     }

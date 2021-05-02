@@ -6,6 +6,7 @@ const teamSchema = new mongoose.Schema({
   // userName:String,
   teamName: String,
   teamCode: String,
+  projectLink:String,
   members: [
     {
       type: mongoose.Schema.Types.ObjectID,
