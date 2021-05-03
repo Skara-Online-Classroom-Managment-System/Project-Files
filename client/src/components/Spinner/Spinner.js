@@ -1,8 +1,15 @@
-import React from 'react';
-import classes from './Spinner.module.css';
+import React from "react";
+import GIF from "../../assets/img/Kaleidoscope.gif";
+import "./Spinner.css";
 
-const spinner = () => (
-    <div className={classes.Loader}>Loading...</div>
-);
+const FullPageLoader = () => {
+  return (
+    <div className='fp-container'>
+      {/* <img src={GIF} className='fp-loader' alt='loading' />
+      <h1 className='fp-loader'>Loading</h1> */}
+      Hello
+    </div>
+  );
+};
 
-export default spinner;
+export default FullPageLoader;

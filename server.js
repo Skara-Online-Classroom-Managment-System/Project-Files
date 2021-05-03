@@ -10,7 +10,7 @@ const session = require("express-session");
 const MongoStore = require("connect-mongo");
 
 // Define the PORT
-const PORT = 5000;
+const PORT = process.env.PORT|| 5000;
 
 // express was initialized
 const app = express();
@@ -33,7 +33,7 @@ app.use(
 app.use(cookieParser());
 
 // connecting to the mongoDB
-mongoose.connect("mongodb://localhost:27017/SkaraDB", {
+mongoose.connect("mongodb+srv://Sachin:Skara@2021@skara-db.cp2ih.mongodb.net/SkaraDb", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
@@ -46,7 +46,7 @@ db.once("open", function () {
 });
 
 const sessionStore = new MongoStore({
-  mongoUrl: "mongodb://localhost:27017/SkaraDB",
+  mongoUrl: "mongodb+srv://Sachin:Skara@2021@skara-db.cp2ih.mongodb.net/SkaraDb",
   mongooseConnection: mongoose.connection,
   collection: "sessions",
   ttl: 24 * 60 * 60 * 1000,
@@ -62,6 +62,10 @@ app.use(
   })
 );
 
+if(process.env.NODE_ENV==='production'){
+  app.use(express.static("client/build"));
+}
+
 // Requiring the models
 const classroom = require("./models/classroomModel.js");
 const student = require("./models/studentModel.js");
@@ -69,18 +73,7 @@ const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
 const { createBrotliCompress } = require("zlib");
 
-// const data2=new team({
-//   teamName:"snorlax",
-//   classAssosiated:"607d62893c4d5c3e58b112b0",
-//   members:[],
-//   teamChat:[],
-//   teacherChat:[]
-// })
-// data2.save(err=>{
-//   if(!err){
-//     console.log("succeedd");
-//   }
-// })
+
 
 // a post route to the logout functionality
 app.post("/logout", function (req, res) {
