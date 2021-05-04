@@ -3,8 +3,8 @@ import React from "react";
 import axios from "axios";
 import { Redirect, Link, useParams } from "react-router-dom";
 
-import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
-import UserDropdown from "components/Dropdowns/UserDropdown.js";
+import NotificationDropdown from "../Dropdowns/NotificationDropdown.js";
+import UserDropdown from "../Dropdowns/UserDropdown.js";
 
 export default function Sidebar() {
   const [collapseShow, setCollapseShow] = React.useState("hidden");
@@ -17,7 +17,7 @@ export default function Sidebar() {
     axios({
       method: "GET",
       withCredentials: true,
-      url: "http://localhost:5000/dashboard",
+      url: "/dashboard",
     }).then((res) => {
       setclassData(res.data.details);
       setType(res.data.type);
@@ -68,7 +68,7 @@ export default function Sidebar() {
       params: {
         pos: pos,
       },
-      url: "http://localhost:5000/leaveteam",
+      url: "/leaveteam",
     }).then((res) => {
       console.log("succesfully left");
       setRedirect(true);
@@ -85,7 +85,7 @@ export default function Sidebar() {
       params: {
         pos: pos,
       },
-      url: "http://localhost:5000/delete",
+      url: "/delete",
     }).then((res) => {
       console.log("succesfully deleted");
     });

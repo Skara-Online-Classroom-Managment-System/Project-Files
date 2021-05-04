@@ -1,8 +1,7 @@
 import React from "react";
-import { Redirect, useHistory, Link, useParams } from "react-router-dom";
-import axios from "axios";
+import { Link, useParams } from "react-router-dom";
 
-import UserDropdown from "components/Dropdowns/UserDropdown.js";
+import UserDropdown from "../Dropdowns/UserDropdown.js";
 
 export default function Navbar() {
   console.log("inside teacher navbar");

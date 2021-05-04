@@ -1,9 +1,7 @@
 import React from "react";
-import { Redirect } from "react-router-dom";
 import axios from "axios";
-import { Alert } from "react-bootstrap";
 
-import UserDropdown from "components/Dropdowns/UserDropdown.js";
+import UserDropdown from "../Dropdowns/UserDropdown.js";
 
 export default function Navbar() {
   const [classCodeEntered, setClassCodeEntered] = React.useState("");
@@ -15,7 +13,7 @@ export default function Navbar() {
     axios({
       method: "POST",
       withCredentials: true,
-      url: "http://localhost:5000/addclass",
+      url: "/addclass",
       data: {
         classCode: classCodeEntered,
       },

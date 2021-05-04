@@ -3,8 +3,8 @@ import React from "react";
 import axios from "axios";
 import { Redirect, Link } from "react-router-dom";
 
-import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
-import UserDropdown from "components/Dropdowns/UserDropdown.js";
+import NotificationDropdown from "../Dropdowns/NotificationDropdown.js";
+import UserDropdown from "../Dropdowns/UserDropdown.js";
 
 export default function Sidebar() {
   const [collapseShow, setCollapseShow] = React.useState("hidden");
@@ -16,7 +16,7 @@ export default function Sidebar() {
     axios({
       method: "POST",
       withCredentials: true,
-      url: "http://localhost:5000/addclass",
+      url: "/addclass",
       data: {
         classCode: classCodeEntered,
       },
@@ -40,7 +40,7 @@ export default function Sidebar() {
     axios({
       method: "GET",
       withCredentials: true,
-      url: "http://localhost:5000/dashboard",
+      url: "/dashboard",
     }).then((res) => {
       setclassData(res.data.details);
     });

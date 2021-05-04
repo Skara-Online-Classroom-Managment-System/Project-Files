@@ -2,9 +2,8 @@ import React from "react";
 import { Link, Redirect } from "react-router-dom";
 import axios from "axios";
 
-import Navbar from "components/Navbars/AuthNavbar.js";
-import Footer from "components/Footers/Footer.js";
-import PersonIcon from "@material-ui/icons/Person";
+import Navbar from "../components/Navbars/AuthNavbar.js";
+import Footer from "../components/Footers/Footer.js";
 
 export default function Profile() {
   const [userData, setUserData] = React.useState({ classesEnrolled: [] });
@@ -15,7 +14,7 @@ export default function Profile() {
     axios({
       method: "GET",
       withCredentials: true,
-      url: "http://localhost:5000/dashboard",
+      url: "/dashboard",
     }).then((res) => {
       setUserData(res.data.details);
       setType(res.data.type);
@@ -26,7 +25,7 @@ export default function Profile() {
     axios({
       method: "POST",
       withCredentials: true,
-      url: "http://localhost:5000/deleteprofile",
+      url: "/deleteprofile",
     }).then((res) => {
       setRedirect(true);
     });
@@ -43,7 +42,7 @@ export default function Profile() {
             className='absolute top-200 w-full h-full bg-center bg-cover'
             style={{
               backgroundImage:
-                "url(" + require("assets/img/loginbg.png").default + ")",
+                "url(" + require("../assets/img/loginbg.png").default + ")",
             }}
           ></div>
           <div
@@ -75,7 +74,7 @@ export default function Profile() {
                     <div className='relative'>
                       <img
                         alt='...'
-                        src={require("assets/img/porple.png").default}
+                        src={require("../assets/img/porple.png").default}
                         className='shadow-xl rounded-full h-auto align-middle border-none absolute -m-16 -ml-20 lg:-ml-16 max-w-150-px'
                       />
                     </div>

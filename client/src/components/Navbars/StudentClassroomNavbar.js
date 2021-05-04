@@ -1,7 +1,7 @@
 import React from "react";
 import {  Link, useParams } from "react-router-dom";
 
-import UserDropdown from "components/Dropdowns/UserDropdown.js";
+import UserDropdown from "../Dropdowns/UserDropdown.js";
 
 export default function Navbar() {
   const { pos } = useParams();

@@ -1,6 +1,6 @@
 import React from "react";
-import { Link, useParams, withRouter } from "react-router-dom";
-import axios from "axios";
+import {  withRouter } from "react-router-dom";
+
 
 const CardStats = ({
   announcementPos,
@@ -12,26 +12,7 @@ const CardStats = ({
   statIconName,
   statIconColor,
 }) => {
-  const [redirect, setRedirect] = React.useState(false);
-  const { pos } = useParams();
-  function handleClick() {
-    console.log("handle click of delete announcement ");
-    axios({
-      method: "GET",
-      withCredentials: true,
-      params: {
-        pos: pos,
-        announcementPos: announcementPos,
-      },
-      url: "http://localhost:5000/deleteannouncement",
-    }).then((res) => {
-      console.log("announcement deleted");
-      setRedirect(true);
-    });
-  }
-  if (redirect) {
-    window.location.reload();
-  }
+  
   return (
     <>
       <div className='relative flex flex-col min-w-0 break-words bg-white rounded mb-10 xl:mb-0 shadow-lg'>

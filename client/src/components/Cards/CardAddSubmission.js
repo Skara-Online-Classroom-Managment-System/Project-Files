@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams, Redirect } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export default function CardStats({ statIconName, statIconColor,submitted }) {
@@ -17,7 +17,7 @@ export default function CardStats({ statIconName, statIconColor,submitted }) {
     axios({
       method: "POST",
       withCredentials: true,
-      url: "http://localhost:5000/submitproject",
+      url: "/submitproject",
       data: {
         pos:pos,
         projectLink: announcement,

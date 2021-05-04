@@ -2,14 +2,14 @@ import React from "react";
 
 // components
 
-import TeacherClassroomNavbar from "components/Navbars/TeacherClassroomNavbar.js";
-import ClassroomSidebar from "components/Sidebar/ClassroomSidebar.js";
+import TeacherClassroomNavbar from "../components/Navbars/TeacherClassroomNavbar.js";
+import ClassroomSidebar from "../components/Sidebar/ClassroomSidebar.js";
 
-import FooterSmall from "components/Footers/FooterClassroom.js";
+import FooterSmall from "../components/Footers/FooterClassroom.js";
 
 // views
 
-import Tables from "views/admin/Tables.js";
+import Tables from "../views/admin/Tables.js";
 
 export default function Admin() {
 

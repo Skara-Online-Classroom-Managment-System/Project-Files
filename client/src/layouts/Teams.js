@@ -4,15 +4,15 @@ import axios from "axios";
 import ReactScrollableFeed from "react-scrollable-feed";
 // components
 
-import ClassroomNavbar from "components/Navbars/TeacherClassroomNavbar.js";
-import TeamSidebar from "components/Sidebar/TeamSidebar.js";
+import ClassroomNavbar from "../components/Navbars/TeacherClassroomNavbar.js";
+import TeamSidebar from "../components/Sidebar/TeamSidebar.js";
 import {Alert} from "react-bootstrap";
 
 // views
-import CardStats from "components/Cards/CardStats.js";
-import CardChat from "components/Cards/CardChat.js";
-import FooterSmall from "components/Footers/FooterClassroom.js";
-import CardAddSubmission from "components/Cards/CardAddSubmission.js";
+import CardStats from "../components/Cards/CardStats.js";
+import CardChat from "../components/Cards/CardChat.js";
+import FooterSmall from "../components/Footers/FooterClassroom.js";
+import CardAddSubmission from "../components/Cards/CardAddSubmission.js";
 
 
 export default function Admin() {
@@ -39,7 +39,7 @@ export default function Admin() {
     axios({
       method: "GET",
       withCredentials: true,
-      url: "http://localhost:5000/teams",
+      url: "/teams",
       params: {
         pos: pos,
       },
@@ -66,7 +66,7 @@ export default function Admin() {
     axios({
       method: "POST",
       withCredentials: true,
-      url: "http://localhost:5000/classroom/jointeam",
+      url: "/classroom/jointeam",
       data: {
         teamCode: teamCode,
         pos: pos,
@@ -87,7 +87,7 @@ export default function Admin() {
     axios({
       method: "POST",
       withCredentials: true,
-      url: "http://localhost:5000/classroom/createteam",
+      url: "/classroom/createteam",
       data: {
         name: teamName,
         pos: pos,
@@ -119,7 +119,7 @@ export default function Admin() {
         pos: pos,
       },
       withCredentials: true,
-      url: "http://localhost:5000/createChat",
+      url: "/createChat",
     }).then((res) => {
       console.log(res.data.class, "team chat");
       setStudentChatData(res.data.class);
@@ -142,7 +142,7 @@ export default function Admin() {
         pos: pos,
       },
       withCredentials: true,
-      url: "http://localhost:5000/teacherChat",
+      url: "/teacherChat",
     }).then((res) => {
       console.log(res.data.class, "team chat");
       setTeacherChatData(res.data.class);

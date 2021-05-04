@@ -1,5 +1,5 @@
 import React from "react";
-import { Link,Redirect } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { createPopper } from "@popperjs/core";
 
 const UserDropdown = () => {
@@ -18,7 +18,7 @@ const UserDropdown = () => {
     setDropdownPopoverShow(false);
   };
   async function handleLogOut() {
-    await fetch("http://localhost:5000/logout", {
+    await fetch("/logout", {
       method: "POST",
       credentials: "include",
     })
@@ -47,7 +47,7 @@ const UserDropdown = () => {
             <img
               alt='...'
               className='w-full rounded-full align-middle border-none shadow-lg'
-              src={require("assets/img/porple.png").default}
+              src={require("../../assets/img/porple.png").default}
             />
           </span>
         </div>

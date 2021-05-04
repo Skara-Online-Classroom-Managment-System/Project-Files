@@ -1,17 +1,16 @@
 /*eslint-disable*/
 import React from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 // components
 
-import IndexDropdown from "components/Dropdowns/IndexDropdown.js";
+import IndexDropdown from "../Dropdowns/IndexDropdown.js";
 
 export default function Navbar(props) {
   const [navbarOpen, setNavbarOpen] = React.useState(false);
   
   const [redirect,setRedirect]=React.useState(false);
   async function handleLogOut() {
-    await fetch("http://localhost:5000/logout", {
+    await fetch("/logout", {
       method: "POST",
       credentials: "include",
     }).then((res)=>{

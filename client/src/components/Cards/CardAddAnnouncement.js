@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams, Redirect } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export default function CardStats({ statIconName, statIconColor }) {
@@ -19,7 +19,7 @@ export default function CardStats({ statIconName, statIconColor }) {
         announcement: announcement,
       },
       withCredentials: true,
-      url: "http://localhost:5000/createAnnouncement/" + pos,
+      url: "/createAnnouncement/" + pos,
     }).then((res) => {
       setRedirect(true);
     });

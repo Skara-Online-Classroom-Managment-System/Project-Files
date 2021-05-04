@@ -4,16 +4,15 @@ import axios from "axios";
 
 // components
 
-import StudentClassroomNavbar from "components/Navbars/StudentClassroomNavbar.js";
-import TeacherClassroomNavbar from "components/Navbars/TeacherClassroomNavbar.js";
-import ClassroomSidebar from "components/Sidebar/ClassroomSidebar.js";
-import FooterSmall from "components/Footers/FooterClassroom.js";
+import StudentClassroomNavbar from "../components/Navbars/StudentClassroomNavbar.js";
+import TeacherClassroomNavbar from "../components/Navbars/TeacherClassroomNavbar.js";
+import ClassroomSidebar from "../components/Sidebar/ClassroomSidebar.js";
 
 // views
 
-import CardStats from "components/Cards/CardStats.js";
-import CardClassTitle from "components/Cards/CardClassTitle.js";
-import CardAddAnnouncement from "components/Cards/CardAddAnnouncement.js";
+import CardStats from "../components/Cards/CardStats.js";
+import CardClassTitle from "../components/Cards/CardClassTitle.js";
+import CardAddAnnouncement from "../components/Cards/CardAddAnnouncement.js";
 
 const Admin=()=> {
   const [classData, setclassData] = React.useState({});
@@ -23,7 +22,7 @@ const Admin=()=> {
     axios({
       method: "GET",
       withCredentials: true,
-      url: "http://localhost:5000/classroom",
+      url: "/classroom",
       params: {
         pos: pos,
       },

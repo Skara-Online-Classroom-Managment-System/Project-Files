@@ -1,5 +1,5 @@
 {
-  "name": "Skara",
+  "name": "skara-full",
   "version": "1.0.0",
   "description": "",
   "repository": "",
@@ -14,9 +14,6 @@
     "axios": "^0.21.1",
     "bootstrap": "^4.6.0",
     "chart.js": "^2.9.4",
-    "gulp": "^4.0.2",
-    "gulp-append-prepend": "^1.0.9",
-    "postcss": "^8.2.8",
     "react": "^17.0.2",
     "react-bootstrap": "^1.5.2",
     "react-dom": "^17.0.2",
@@ -24,12 +21,11 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.3",
     "react-scrollable-feed": "^1.3.0",
-    "reactstrap": "^8.9.0",
-    "tailwindcss": "^2.0.4"
+    "reactstrap": "^8.9.0"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && gulp licenses",
+    "build": "react-scripts build ",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm run build:tailwind && npm start",
@@ -52,5 +48,10 @@
   },
   "optionalDependencies": {
     "typescript": "4.2.3"
+  },
+  "proxy": "http://localhost:5000/",
+  "devDependencies": {
+    "postcss": "^8.2.13",
+    "tailwindcss": "^2.1.2"
   }
 }

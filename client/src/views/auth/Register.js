@@ -26,7 +26,7 @@ export default function Register() {
   }
   async function handleSubmit() {
     if (selection === 1) {
-      const response = await fetch("http://localhost:5000/studentsignup", {
+      const response = await fetch("/studentsignup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -47,7 +47,7 @@ export default function Register() {
         console.log(content);
       }
     } else {
-      const response = await fetch("http://localhost:5000/teachersignup", {
+      const response = await fetch("/teachersignup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -5,11 +5,11 @@ import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
 import MenuBookIcon from '@material-ui/icons/MenuBook';
 import PeopleIcon from '@material-ui/icons/People';
 import LiveHelpIcon from '@material-ui/icons/LiveHelp';
-import IndexNavbar from "components/Navbars/IndexNavbar.js";
+import IndexNavbar from "../components/Navbars/IndexNavbar.js";
 import PostAddIcon from '@material-ui/icons/PostAdd';
 import ViewCarouselIcon from '@material-ui/icons/ViewCarousel';
 import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
-import Footer from "components/Footers/Footer.js";
+import Footer from "../components/Footers/Footer.js";
 import DevicesIcon from '@material-ui/icons/Devices';
 // import { Laptop } from "@material-ui/icons";
 
@@ -102,7 +102,7 @@ const Ind=()=>{
         <img
           width='200px'
           className='absolute top-0 b-auto right-0 pt-16 sm:w-6/12 -mx-auto sm:mt-0 w-10/12 max-h-100px'
-          src={require("assets/img/newgif.gif").default}
+          src={require("../assets/img/newgif.gif").default}
           alt='...'
         />
       </section>
@@ -128,7 +128,7 @@ const Ind=()=>{
             <div className='w-10/12 md:w-6/12 lg:w-4/12 px-12 md:px-4 mr-auto ml-auto -mt-32'>
               <div className='relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg bg-lightBlue-500'>
                 <img                  
-                  src={require("assets/img/Devices-bro.png").default}
+                  src={require("../assets/img/Devices-bro.png").default}
                   
                   className='w-full align-middle rounded-t-lg'
                 />
@@ -281,7 +281,7 @@ const Ind=()=>{
                 alt='...'
                 className='mx-auto w-70'
                 style={{}}
-                src={require("assets/img/Grill.png").default}
+                src={require("../assets/img/Grill.png").default}
               />
             </div>
           </div>

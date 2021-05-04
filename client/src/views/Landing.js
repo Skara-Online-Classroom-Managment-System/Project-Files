@@ -1,20 +1,18 @@
 import React from "react";
-import axios from "axios";
 
 import { Switch, Route, Redirect } from "react-router-dom";
 
 // components
 
-import Navbar from "components/Navbars/AuthNavbar.js";
-import FooterSmall from "components/Footers/FooterSmall.js";
+import Navbar from "../components/Navbars/AuthNavbar.js";
+import FooterSmall from "../components/Footers/FooterSmall.js";
 
 // views
 
-import Register from "views/auth/Register.js";
-var Link = require('react-router-dom').Link
+import Register from "../views/auth/Register.js";
 
 export default function Login() {
-  const [selection, setSelection] = React.useState(1);
+  const selection = 1;
   const [redirect, setRedirect] = React.useState(false);
   const [details, setDetails] = React.useState({
     username: "",
@@ -24,7 +22,7 @@ export default function Login() {
   async function handleSubmit() {
     const queryParam = selection === 1 ? "student" : "teacher";
     const response = await fetch(
-      "http://localhost:5000/" + queryParam + "login",
+      "/" + queryParam + "login",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,7 +75,7 @@ export default function Login() {
             className="absolute top-0 w-full h-full bg-blueGray-800 bg-no-repeat bg-full"
             style={{
               backgroundImage:
-                "url(" + require("assets/img/loginbg.png").default + ")",
+                "url(" + require("../assets/img/loginbg.png").default + ")",
             }}
           ></div>
           

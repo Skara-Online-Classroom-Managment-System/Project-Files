@@ -1,19 +1,19 @@
 import React from "react";
-import { Switch, Route, Redirect, Link, withRouter } from "react-router-dom";
+import {  Route, Redirect, Link, withRouter } from "react-router-dom";
 import axios from "axios";
 
 // components
 
-import StudentAdminNavbar from "components/Navbars/StudentAdminNavbar.js";
-import TeacherAdminNavbar from "components/Navbars/TeacherAdminNavbar.js";
-import StudentSidebar from "components/Sidebar/StudentSidebar.js";
-import TeacherSidebar from "components/Sidebar/TeacherSidebar.js";
-import FooterAdmin from "components/Footers/FooterAdmin.js";
+import StudentAdminNavbar from "../components/Navbars/StudentAdminNavbar.js";
+import TeacherAdminNavbar from "../components/Navbars/TeacherAdminNavbar.js";
+import StudentSidebar from "../components/Sidebar/StudentSidebar.js";
+import TeacherSidebar from "../components/Sidebar/TeacherSidebar.js";
+import FooterAdmin from "../components/Footers/FooterAdmin.js";
 
 // views
 
-import Dashboard from "views/admin/Dashboard.js";
-import CardStats from "components/Cards/CardStats.js";
+import Dashboard from "../views/admin/Dashboard.js";
+import CardStats from "../components/Cards/CardStats.js";
 
 const Das = () => {
   const [studentData, setstudentData] = React.useState({ classesEnrolled: [] });
@@ -23,7 +23,7 @@ const Das = () => {
     axios({
       method: "GET",
       withCredentials: true,
-      url: "http://localhost:5000/dashboard",
+      url: "/dashboard",
     }).then((res) => {
       setstudentData(res.data.details);
       setType(res.data.type);

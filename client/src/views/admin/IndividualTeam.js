@@ -3,16 +3,14 @@ import axios from "axios";
 import ReactScrollableFeed from "react-scrollable-feed";
 import { useParams } from "react-router-dom";
 
-import ClassroomNavbar from "components/Navbars/TeacherClassroomNavbar.js";
-import TeacherSidebar from "components/Sidebar/TeacherSidebar.js";
-// import CardStats from "components/Cards/CardStats.js";
-import CardChat from "components/Cards/CardChat.js";
+import ClassroomNavbar from "../../components/Navbars/TeacherClassroomNavbar.js";
+import TeacherSidebar from "../../components/Sidebar/TeacherSidebar.js";
+import CardChat from "../../components/Cards/CardChat.js";
 
-import CardShowSubmission from "components/Cards/CardShowSubmission.js";
+import CardShowSubmission from "../../components/Cards/CardShowSubmission.js";
 
 export default function Team(props) {
   const [teamData, setTeamData] = React.useState(null);
-  const [type, setType] = React.useState(null);
   const [teacherChat, setTeacherChat] = React.useState({
     message: "",
   });
@@ -27,7 +25,7 @@ export default function Team(props) {
         teampos: teampos,
       },
       withCredentials: true,
-      url: "http://localhost:5000/teamselected",
+      url: "/teamselected",
     }).then((res) => {
       console.log(res.data.teamDetails);
       setTeamData(res.data.teamDetails);
@@ -53,7 +51,7 @@ export default function Team(props) {
         pos: pos,
       },
       withCredentials: true,
-      url: "http://localhost:5000/teacherChat",
+      url: "/teacherChat",
     }).then((res) => {
       console.log(res.data.class, "team chat");
       setTeacherChatData(res.data.class);

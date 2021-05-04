@@ -8,9 +8,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
-
+const dotenv = require("dotenv");
+dotenv.config();
 // Define the PORT
-const PORT = process.env.PORT|| 5000;
+const PORT = process.env.PORT || 5000;
 
 // express was initialized
 const app = express();
@@ -31,9 +32,9 @@ app.use(
 );
 
 app.use(cookieParser());
-
+const CONNECTION_URL = process.env.MONGO_URI;
 // connecting to the mongoDB
-mongoose.connect("mongodb+srv://Sachin:Skara@2021@skara-db.cp2ih.mongodb.net/SkaraDb", {
+mongoose.connect(CONNECTION_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
@@ -45,24 +46,23 @@ db.once("open", function () {
   console.log("Database connected");
 });
 
-const sessionStore = new MongoStore({
-  mongoUrl: "mongodb+srv://Sachin:Skara@2021@skara-db.cp2ih.mongodb.net/SkaraDb",
-  mongooseConnection: mongoose.connection,
-  collection: "sessions",
-  ttl: 24 * 60 * 60 * 1000,
-});
-
+const key = process.env.key;
 app.use(
   session({
-    secret: "secret",
-    store: sessionStore,
+    store: MongoStore.create({
+      mongoUrl: CONNECTION_URL,
+      mongooseConnection: mongoose.connection,
+      collection: "sessions",
+      ttl: 24 * 60 * 60 * 1000,
+    }),
+    secret: key,
     cookie: { maxAge: 24 * 60 * 60 * 1000 },
     saveUninitialized: false,
     resave: true,
   })
 );
 
-if(process.env.NODE_ENV==='production'){
+if (process.env.NODE_ENV === "production") {
   app.use(express.static("client/build"));
 }
 
@@ -73,13 +73,10 @@ const teacher = require("./models/teacherModel.js");
 const team = require("./models/teamModel.js");
 const { createBrotliCompress } = require("zlib");
 
-
-
 // a post route to the logout functionality
 app.post("/logout", function (req, res) {
   req.session.value = "NA";
   req.session.destroy();
-  console.log("cookie deleted");
   res.status(200).json({ msg: "logout successfully" });
 });
 
@@ -87,7 +84,7 @@ app.post("/logout", function (req, res) {
 app.get("/user", async (req, res) => {
   try {
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (claims.type === 1) {
       student.findOne({ _id: claims._id }, function (err, currentStudent) {
         if (err) {
@@ -122,7 +119,6 @@ app.post("/teachersignup", async function (req, res) {
     async function (err, currentTeacher) {
       if (err) throw err;
       if (currentTeacher) {
-        console.log("eamil");
         res
           .status(201)
           .json({ msg: "This email has already been registered." });
@@ -165,11 +161,7 @@ app.post("/teacherlogin", function (req, res, next) {
             foundUser.password,
             function (err, result) {
               if (result === true) {
-                console.log("user found");
-                const token = jwt.sign(
-                  { _id: foundUser._id, type: 2 },
-                  "secret"
-                );
+                const token = jwt.sign({ _id: foundUser._id, type: 2 }, key);
                 req.session.value = token;
                 res.status(200).json({ username: enteredDetails.username });
               } else {
@@ -178,7 +170,6 @@ app.post("/teacherlogin", function (req, res, next) {
             }
           );
         } else {
-          console.log("email");
           res.status(201).json({ msg: "email id does not exist" });
         }
       }
@@ -242,11 +233,7 @@ app.post("/studentlogin", function (req, res) {
             foundUser.password,
             function (err, result) {
               if (result === true) {
-                console.log("user found");
-                const token = jwt.sign(
-                  { _id: foundUser._id, type: 1 },
-                  "secret"
-                );
+                const token = jwt.sign({ _id: foundUser._id, type: 1 }, key);
                 req.session.value = token;
                 return res
                   .status(200)
@@ -257,7 +244,6 @@ app.post("/studentlogin", function (req, res) {
             }
           );
         } else {
-          console.log("invalid");
           res.status(201).json({ msg: "invalid credentials" });
         }
       }
@@ -280,13 +266,12 @@ function makeid(length) {
 app.post("/createclassroom", function (req, res) {
   try {
     const cookie = req.session.value;
-    console.log("createClassrooom:", cookie);
-    const claims = jwt.verify(cookie, "secret");
+
+    const claims = jwt.verify(cookie, key);
     teacher.findOne({ _id: claims._id }, function (err, foundTeacher) {
       if (err) {
         console.log(err);
       } else {
-        console.log("insode function of create classroom");
         const data = new classroom({
           className: req.body.className,
           classCode: makeid(6),
@@ -296,7 +281,6 @@ app.post("/createclassroom", function (req, res) {
         });
         data.teachers.push(foundTeacher._id);
         data.save(function (err, result) {
-          console.log(result);
           if (!err) {
             foundTeacher.classesEnrolled.push(result._id);
             foundTeacher.save(function (err) {
@@ -320,8 +304,7 @@ app.post("/createAnnouncement/:pos", function (req, res) {
   try {
     const event = new Date();
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
-    console.log(claims);
+    const claims = jwt.verify(cookie, key);
     teacher
       .findOne({ _id: claims._id })
       .populate("classesEnrolled")
@@ -329,9 +312,7 @@ app.post("/createAnnouncement/:pos", function (req, res) {
         if (err) {
           console.log(err);
         } else {
-          console.log(req.params.pos);
           const foundClass = foundTeacher.classesEnrolled[req.params.pos];
-          console.log(foundClass);
           const data = {
             author: claims._id,
             text: req.body.announcement,
@@ -352,7 +333,7 @@ app.post("/createAnnouncement/:pos", function (req, res) {
 
 app.post("/addclass", function (req, res) {
   const cookie = req.session.value;
-  const claims = jwt.verify(cookie, "secret");
+  const claims = jwt.verify(cookie, key);
   if (!claims || claims.type === 2) {
     res.status(404).json({ message: "Unauthorized" });
   }
@@ -371,7 +352,6 @@ app.post("/addclass", function (req, res) {
             classCode.toString()
           ) {
             found = true;
-            console.log("Class Enrolled in");
             break;
           }
         }
@@ -404,7 +384,7 @@ app.post("/addclass", function (req, res) {
 app.get("/dashboard", function (req, res) {
   try {
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (!claims) {
       res.status(404).json({ message: "Unauthorized" });
     }
@@ -448,10 +428,9 @@ app.get("/dashboard", function (req, res) {
 
 app.get("/classroom", function (req, res) {
   const pos = req.query.pos;
-  console.log(pos, "classroom");
   try {
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (!claims) {
       res.status(404).json({ message: "Unauthorized" });
     }
@@ -528,8 +507,7 @@ app.get("/classroom", function (req, res) {
 
 app.get("/stream", function (req, res) {
   const cookie = req.session.value;
-  console.log(req.session);
-  const claims = jwt.verify(cookie, "secret");
+  const claims = jwt.verify(cookie, key);
   if (!claims) {
     res.status(404).json({ message: "Unauthorized" });
   }
@@ -541,7 +519,6 @@ app.get("/stream", function (req, res) {
         res.send(err);
       } else {
         var { _id, password, ...details } = currentStudent._doc;
-        console.log(details);
         res.status(200).json(details);
       }
     });
@@ -581,11 +558,10 @@ app.post("/people", function (req, res) {
 app.get("/teams", async function (req, res) {
   try {
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (!claims) {
       res.status(201).json({ msg: "unauthorized" });
     }
-    console.log(claims, "teamsclaims");
     if (claims.type === 1) {
       student
         .findOne({ _id: claims._id })
@@ -599,42 +575,31 @@ app.get("/teams", async function (req, res) {
           populate: { path: "teams", populate: { path: "members" } },
         })
         .exec(function (err, currentStudent) {
-          console.log(
-            currentStudent.classesEnrolled[req.query.pos].teams,
-            "currentStudentteams"
-          );
           if (
             currentStudent.classesEnrolled[req.query.pos].teams.length !== 0
           ) {
-            console.log("here");
             var found = false;
             let fteam;
             currentStudent.classesEnrolled[req.query.pos].teams.map(
               (currentTeam, index) => {
-                console.log(currentTeam, "current Team");
                 if (currentTeam.members) {
-                  console.log(currentTeam, "found");
                   currentTeam.members.map((currentMemberId) => {
                     if (
                       currentMemberId._id.toString() === claims._id.toString()
                     ) {
                       found = true;
                       fteam = currentTeam;
-                      console.log("here3");
                     }
                   });
                 }
               }
             );
             if (found) {
-              console.log("here4");
               res.status(200).json({ teamData: fteam, type: claims.type });
             } else {
-              console.log("here5");
               res.status(200).json({ type: claims.type });
             }
           } else {
-            console.log("no team exists");
             res.status(200).json({ teamData: null, type: claims.type });
           }
         });
@@ -653,10 +618,6 @@ app.get("/teams", async function (req, res) {
         })
         .exec(function (err, currentTeacher) {
           if (currentTeacher.classesEnrolled[req.query.pos].teams) {
-            console.log(
-              currentTeacher.classesEnrolled[req.query.pos].teams,
-              "teams"
-            );
             res.status(200).json({
               teamData: currentTeacher.classesEnrolled[req.query.pos].teams,
               type: claims.type,
@@ -684,7 +645,7 @@ function maketeamCode(length) {
 app.post("/classroom/createteam", (req, res) => {
   try {
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (!claims) {
       res.status(201).json({ msg: "unauthorized" });
     }
@@ -703,7 +664,7 @@ app.post("/classroom/createteam", (req, res) => {
 
         currentStudent.classesEnrolled[req.body.pos].teams.push(data);
         await currentStudent.classesEnrolled[req.body.pos].save();
-        console.log("saving");
+
         await data.save();
         res.status(200).json({ msg: "ok" });
       });
@@ -715,7 +676,7 @@ app.post("/classroom/createteam", (req, res) => {
 app.post("/classroom/jointeam", (req, res) => {
   try {
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (!claims) {
       res.status(200).json({ result: "unauthorized" });
     }
@@ -730,20 +691,17 @@ app.post("/classroom/jointeam", (req, res) => {
       .exec((err, currentStudent) => {
         const currentClass = currentStudent.classesEnrolled[req.body.pos];
         if (currentClass.teams) {
-          console.log("teams", currentClass.teams);
           var found = false;
 
           currentClass.teams.map((currentTeam, index) => {
             if (currentTeam.members) {
               currentTeam.members.map((currentMember, index) => {
                 if (currentMember._id.toString() === claims._id.toString()) {
-                  console.log("found");
                   found = true;
                 }
               });
             }
           });
-          console.log("found", found);
           if (found) {
             res.status(200).json({ result: "already a member" });
           } else {
@@ -772,30 +730,12 @@ app.post("/classroom/jointeam", (req, res) => {
     console.log(e);
   }
 });
-// if (foundMember) {
-//   return res
-//     .status(200)
-//     .json({ msg: "Member of existing team" });
-// } else {
-//   console.log("inside findone");
-//   team.findOne(
-//     { teamCode: req.body.teamCode },
-//     (err, currentTeam) => {
-//       if (err) {
-//         console.log(err);
-//       } else {
-//         currentTeam.members.push(claims._id);
-//       }
-//     }
-//   );
-// }
-// );
-// }
+
 app.post("/createChat", (req, res) => {
   try {
     const event = new Date();
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     student
       .findOne({ _id: claims._id })
       .populate("classesEnrolled")
@@ -807,12 +747,9 @@ app.post("/createChat", (req, res) => {
         if (err) {
           console.log(err);
         } else {
-          // console.log(req.params.pos);
           const foundClass = foundStudent.classesEnrolled[req.body.pos];
-          // console.log(foundClass.teams,"createchat");
           foundClass.teams.map(async (currentTeam, index) => {
             if (currentTeam._id.toString() === req.body.id.toString()) {
-              // console.log()
               const data = {
                 author: {
                   name: foundStudent.firstName,
@@ -821,11 +758,9 @@ app.post("/createChat", (req, res) => {
                 text: req.body.message,
                 time: event.toLocaleTimeString("en-US"),
               };
-              // console.log("chat mein map",currentTeam.teamChat)
               currentTeam.teamChat.push(data);
               await currentTeam.save(function (err) {
                 if (!err) {
-                  console.log("inside save");
                   res.status(200).json({ class: currentTeam });
                 }
               });
@@ -842,7 +777,7 @@ app.post("/teacherchat", (req, res) => {
   try {
     const event = new Date();
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (claims.type === 1) {
       student
         .findOne({ _id: claims._id })
@@ -866,11 +801,9 @@ app.post("/teacherchat", (req, res) => {
                   text: req.body.message,
                   time: event.toLocaleTimeString("en-US"),
                 };
-                console.log(data, "data");
                 currentTeam.teacherChat.push(data);
                 await currentTeam.save(function (err, result) {
                   if (!err) {
-                    console.log("inside save");
                     res.status(200).json({ class: currentTeam });
                   }
                 });
@@ -905,16 +838,7 @@ app.post("/teacherchat", (req, res) => {
                 currentTeam.teacherChat.push(data);
                 await currentTeam.save(function (err) {
                   if (!err) {
-                    // team
-                    //   .findOne({ _id: currentTeam._id })
-                    //   .populate({
-                    //     path: "teamChat",
-                    //     populate: { path: "author" },
-                    //   })
-                    //   .exec((err, foundTeam) => {
-                    console.log("inside save");
                     res.status(200).json({ class: currentTeam });
-                    // });
                   }
                 });
               }
@@ -930,7 +854,7 @@ app.post("/teacherchat", (req, res) => {
 app.get("/teamselected", (req, res) => {
   try {
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (!claims) {
       res.status(201).json({ msg: "unauthorized" });
     }
@@ -948,14 +872,10 @@ app.get("/teamselected", (req, res) => {
         })
         .exec(function (err, foundTeacher) {
           const currentClass = foundTeacher.classesEnrolled[req.query.pos];
-          console.log(currentClass);
+
           const currentTeam = currentClass.teams[req.query.teampos];
-          console.log(currentTeam, "currentTeam");
-          // team.findOne({ _id: currentTeam._id }, function (err, foundTeam) {
-          // if (!err) {
-          // console.log(foundTeam);
+
           res.status(200).json({ teamDetails: currentTeam });
-          // }
         });
     }
   } catch (e) {
@@ -964,10 +884,9 @@ app.get("/teamselected", (req, res) => {
 });
 
 app.get("/unenroll", (req, res) => {
-  console.log(req.query.pos);
   try {
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (claims.type === 1) {
       student
         .findOne({ _id: claims._id })
@@ -1005,7 +924,7 @@ app.get("/unenroll", (req, res) => {
 app.get("/delete", (req, res) => {
   try {
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (claims.type === 2) {
       teacher
         .findOne({ _id: claims._id })
@@ -1025,7 +944,6 @@ app.get("/delete", (req, res) => {
                           currentClass.toString() === foundClass._id.toString()
                         ) {
                           foundStudent.classesEnrolled.splice(index, index + 1);
-                          console.log("student updated");
                           await foundStudent.save();
                         }
                       }
@@ -1036,8 +954,6 @@ app.get("/delete", (req, res) => {
                   await team.deleteOne({ _id: currentTeam }, (err) => {
                     if (err) {
                       console.log(err);
-                    } else {
-                      console.log("succesfully team deleted");
                     }
                   });
                 });
@@ -1066,9 +982,8 @@ app.get("/delete", (req, res) => {
 
 app.get("/leaveteam", (req, res) => {
   try {
-    console.log("inside leave");
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (claims.type === 1) {
       student
         .findOne({ _id: claims._id })
@@ -1082,7 +997,6 @@ app.get("/leaveteam", (req, res) => {
               .populate("teams")
               .exec(async (err, foundClass) => {
                 let position;
-                console.log("foundClas:", foundClass);
                 foundClass.teams.map(async (currentTeam, index) => {
                   currentTeam.members.map((id, index) => {
                     if (id.toString() === claims._id.toString()) {
@@ -1094,7 +1008,6 @@ app.get("/leaveteam", (req, res) => {
                     await currentTeam.delete();
                     res.status(200).json({ msg: "left team" });
                   } else {
-                    console.log("successfully updated team");
                     await currentTeam.save();
                     res.status(200).json({ msg: "left team" });
                   }
@@ -1111,7 +1024,7 @@ app.get("/leaveteam", (req, res) => {
 app.post("/submitproject", (req, res) => {
   try {
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (claims.type === 1) {
       student
         .findOne({ _id: claims._id })
@@ -1124,8 +1037,6 @@ app.post("/submitproject", (req, res) => {
               .findOne({ _id: foundStudent.classesEnrolled[req.body.pos] })
               .populate("teams")
               .exec(async (err, foundClass) => {
-                let position;
-                console.log("foundClas:", foundClass);
                 foundClass.teams.map(async (currentTeam, index) => {
                   currentTeam.members.map(async (id, index) => {
                     if (id.toString() === claims._id.toString()) {
@@ -1146,9 +1057,8 @@ app.post("/submitproject", (req, res) => {
 
 app.get("/deleteannouncement", (req, res) => {
   try {
-    console.log("inside delete");
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (claims.type === 2) {
       teacher
         .findOne({ _id: claims._id })
@@ -1161,10 +1071,7 @@ app.get("/deleteannouncement", (req, res) => {
               .findOne({ _id: foundTeacher.classesEnrolled[req.query.pos] })
               .populate("teams")
               .exec(async (err, foundClass) => {
-                console.log("foundClas:", foundClass);
-                console.log(req.query.announcementPos);
                 const length = foundClass.announcements.length;
-                console.log("length", length);
                 if (length - req.query.announcementPos - 1 === 0) {
                   foundClass.announcements.splice(
                     length - req.query.announcementPos - 1,
@@ -1177,7 +1084,6 @@ app.get("/deleteannouncement", (req, res) => {
                   );
                 }
                 await foundClass.save();
-                console.log("successfully deleted announcement");
                 res.status(200).json({ msg: "deleted" });
               });
           }
@@ -1191,9 +1097,8 @@ app.get("/deleteannouncement", (req, res) => {
 // delete the profile
 app.post("/deleteprofile", (req, res) => {
   try {
-    console.log("inside delete profile");
     const cookie = req.session.value;
-    const claims = jwt.verify(cookie, "secret");
+    const claims = jwt.verify(cookie, key);
     if (claims.type === 2) {
       teacher.findById(claims._id, function (err, currentTeacher) {
         if (err) {
@@ -1220,7 +1125,6 @@ app.post("/deleteprofile", (req, res) => {
         }
         currentTeacher.remove();
       });
-      console.log("teacher delete");
       res.status(200).json({ msg: "teacher deleted" });
     } else if (claims.type === 1) {
       student
@@ -1256,7 +1160,6 @@ app.post("/deleteprofile", (req, res) => {
             currentStudent.remove();
           }
         });
-      console.log("student delete");
       res.status(200).json({ msg: "student deleted" });
     }
   } catch (e) {

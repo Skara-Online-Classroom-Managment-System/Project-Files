@@ -2,7 +2,7 @@ import React from "react";
 import { Redirect } from "react-router-dom";
 import axios from "axios";
 
-import UserDropdown from "components/Dropdowns/UserDropdown.js";
+import UserDropdown from "./components/Dropdowns/UserDropdown.js";
 
 export default function Navbar() {
   const [classCodeEntered, setClassCodeEntered] = React.useState("");
@@ -12,7 +12,7 @@ export default function Navbar() {
     axios({
       method: "POST",
       withCredentials: true,
-      url: "http://localhost:5000/addclass",
+      url: "/addclass",
       data: {
         classCode: classCodeEntered,
       },
@@ -20,7 +20,7 @@ export default function Navbar() {
       const loadedData = res.data;
       console.log(loadedData);
       if (res.status === 200) {
-        setRedirect = true;
+        setRedirect(true);
       }
     });
   }

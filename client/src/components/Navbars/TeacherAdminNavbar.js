@@ -2,7 +2,7 @@ import React from "react";
 // import { Redirect, useHistory } from "react-router-dom";
 import axios from "axios";
 
-import UserDropdown from "components/Dropdowns/UserDropdown.js";
+import UserDropdown from "../Dropdowns/UserDropdown.js";
 
 export default function Navbar() {
   const [redirect, setRedirect] = React.useState(false);
@@ -17,7 +17,7 @@ export default function Navbar() {
         className: details.className,
       },
       withCredentials: true,
-      url: "http://localhost:5000/createClassroom",
+      url: "/createClassroom",
     }).then((res) => {
       console.log("hello");
       if (res.status === 200) {

@@ -16,7 +16,7 @@ export default function Login() {
   async function handleSubmit() {
     const queryParam = selection === 1 ? "student" : "teacher";
     const response = await fetch(
-      "http://localhost:5000/" + queryParam + "login",
+      "/" + queryParam + "login",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

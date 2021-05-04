@@ -23,7 +23,7 @@ const CardStats = ({
         pos: pos,
         announcementPos: announcementPos,
       },
-      url: "http://localhost:5000/deleteannouncement",
+      url: "/deleteannouncement",
     }).then((res) => {
       console.log("announcement deleted");
       setRedirect(true);
